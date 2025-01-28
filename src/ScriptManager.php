@@ -37,6 +37,10 @@ class ScriptManager {
 						'strategy' => 'async',
 					),
 				);
+
+				wp_localize_script( $script['handle'], 'debughawkConfig', array(
+					'endpoint' => $this->config->endpoint,
+				) );
 			}
 		} );
 

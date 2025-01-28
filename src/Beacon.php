@@ -95,8 +95,8 @@ class Beacon {
 
 		echo '<!-- Begin DebugHawk output -->' . "\n\n";
 		echo '<script>';
-		echo 'window.DebugHawk = ' . json_encode( $payload ) . ';';
-		echo 'console.log( window.DebugHawk )';
+		echo 'window.debughawkMetrics = ' . json_encode( $payload ) . ';';
+		echo 'console.log( window.debughawkMetrics );';
 		echo '</script>';
 		echo '<!-- End DebugHawk output -->' . "\n\n";
 	}
