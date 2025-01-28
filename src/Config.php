@@ -4,6 +4,7 @@ namespace DebugHawk;
 
 /**
  * @property boolean $enabled
+ * @property string $endpoint
  * @property float $sample_rate
  * @property string $secret
  * @property boolean $trace_admin_pages
@@ -25,6 +26,10 @@ class Config {
 		$this->path    = $path;
 		$this->url     = plugin_dir_url( $path );
 		$this->version = $version;
+	}
+
+	public function configured(): bool {
+		return is_string( $this->endpoint ) && is_string( $this->secret );
 	}
 
 	public function __get( string $name ) {

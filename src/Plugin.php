@@ -10,7 +10,7 @@ class Plugin {
 	}
 
 	public function init(): void {
-		if ( ! $this->config->enabled ) {
+		if ( ! $this->config->enabled || ! $this->config->configured() ) {
 			return;
 		}
 
