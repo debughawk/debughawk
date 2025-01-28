@@ -77,8 +77,8 @@ class Beacon {
 				'cache_misses' => $cache_misses ?? null,
 			],
 			'page_cache'   => [
-				'identifier'      => uniqid(),
-				'generation_time' => time(),
+				'identifier' => uniqid(),
+				'timestamp'  => time(),
 			],
 			'php'          => [
 				'execution_time' => ( microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'] ) * 1000,
@@ -95,8 +95,8 @@ class Beacon {
 
 		echo '<!-- Begin DebugHawk output -->' . "\n\n";
 		echo '<script>';
-		echo 'window.debughawkMetrics = ' . json_encode( $payload ) . ';';
-		echo 'console.log( window.debughawkMetrics );';
+		echo 'window.DebugHawkMetrics = ' . json_encode( $payload ) . ';';
+		echo 'console.log( window.DebugHawkMetrics );';
 		echo '</script>';
 		echo '<!-- End DebugHawk output -->' . "\n\n";
 	}

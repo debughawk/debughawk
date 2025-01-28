@@ -38,8 +38,9 @@ class ScriptManager {
 					),
 				);
 
-				wp_localize_script( $script['handle'], 'debughawkConfig', array(
-					'endpoint' => $this->config->endpoint,
+				wp_localize_script( $script['handle'], 'DebugHawkConfig', array(
+					'endpoint'    => $this->config->endpoint,
+					'sample_rate' => $this->config->sample_rate,
 				) );
 			}
 		} );
@@ -53,6 +54,11 @@ class ScriptManager {
 					$this->config->version,
 					true,
 				);
+
+				wp_localize_script( $script['handle'], 'DebugHawkConfig', array(
+					'endpoint'    => $this->config->endpoint,
+					'sample_rate' => $this->config->sample_rate,
+				) );
 			}
 		} );
 	}
