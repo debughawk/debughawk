@@ -86,10 +86,10 @@ class Beacon {
 				'version'        => phpversion(),
 			],
 			'wordpress'    => [
-				'admin_request' => is_admin(),
-				'post_id'       => is_singular() ? get_the_ID() : null,
-				'post_type'     => is_singular() ? get_post_type() : null,
-				'version'       => get_bloginfo( 'version' ),
+				'is_admin'  => is_admin(),
+				'post_id'   => is_singular() ? get_the_ID() : null,
+				'post_type' => is_singular() ? get_post_type() : null,
+				'version'   => get_bloginfo( 'version' ),
 			],
 		];
 
