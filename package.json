@@ -1,0 +1,18 @@
+{
+  "source": "resources/src/beacon.js",
+  "main": "resources/dist/beacon.js",
+  "targets": {
+    "main": {
+      "includeNodeModules": true
+    }
+  },
+  "scripts": {
+    "watch": "parcel watch",
+    "build": "parcel build"
+  },
+  "devDependencies": {
+    "bowser": "^2.11.0",
+    "parcel": "^2.13.3",
+    "web-vitals": "^4.2.4"
+  }
+}

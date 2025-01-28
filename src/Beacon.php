@@ -4,15 +4,19 @@ namespace DebugHawk;
 
 class Beacon {
 	public Config $config;
+	public ScriptManager $script;
 
-	public function __construct( Config $config ) {
+	public function __construct( Config $config, ScriptManager $script ) {
 		$this->config = $config;
+		$this->script = $script;
 	}
 
 	public function init(): void {
+		$this->script->enqueue( 'debughawk-beacon', 'beacon.js' );
 		add_action( 'wp_print_footer_scripts', array( $this, 'maybe_print_metrics' ), 9999 );
 
 		if ( $this->config->trace_admin_pages ) {
+			$this->script->enqueue_admin( 'debughawk-beacon', 'beacon.js' );
 			add_action( 'admin_print_footer_scripts', array( $this, 'maybe_print_metrics' ), 9999 );
 		}
 	}

@@ -14,13 +14,15 @@ class Config {
 	];
 
 	private array $config;
-	private string $path;
-	private string $url;
+	public string $path;
+	public string $url;
+	public string $version;
 
-	public function __construct( array $config, string $path ) {
-		$this->config = $config;
-		$this->path   = $path;
-		$this->url    = plugin_dir_url( $path );
+	public function __construct( array $config, string $path, string $version ) {
+		$this->config  = $config;
+		$this->path    = $path;
+		$this->url     = plugin_dir_url( $path );
+		$this->version = $version;
 	}
 
 	public function __get( string $name ) {

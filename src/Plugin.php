@@ -4,7 +4,6 @@ namespace DebugHawk;
 
 class Plugin {
 	public Config $config;
-	public Beacon $beacon;
 
 	public function __construct( Config $config ) {
 		$this->config = $config;
@@ -15,7 +14,11 @@ class Plugin {
 			return;
 		}
 
-		$this->beacon = new Beacon( $this->config );
-		$this->beacon->init();
+		$script = new ScriptManager( $this->config );
+		$beacon = new Beacon( $this->config, $script );
+
+		$beacon->init();
+
+		$script->process();
 	}
 }

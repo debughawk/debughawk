@@ -2,5 +2,6 @@
 /.parcel-cache
 /.vscode
 /node_modules
+/resources/dist
 /vendor
 /composer.lock
