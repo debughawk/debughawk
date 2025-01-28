@@ -95,9 +95,20 @@ class Beacon {
 
 		echo '<!-- Begin DebugHawk output -->' . "\n\n";
 		echo '<script>';
-		echo 'window.DebugHawkMetrics = ' . json_encode( $payload ) . ';';
-		echo 'console.log( window.DebugHawkMetrics );';
+		echo 'window.DebugHawkMetrics = { ';
+		echo 'server: "' . $this->encrypt_payload( json_encode( $payload ) ) . '"';
+		echo ' };';
 		echo '</script>';
 		echo '<!-- End DebugHawk output -->' . "\n\n";
+	}
+
+	protected function encrypt_payload( string $payload ): string {
+		$algo  = 'aes-128-ctr';
+		$ivlen = openssl_cipher_iv_length( $algo );
+		$iv    = openssl_random_pseudo_bytes( $ivlen );
+
+		$encrypted = openssl_encrypt( $payload, $algo, $this->config->secret, OPENSSL_RAW_DATA, $iv );
+
+		return base64_encode( $iv . $encrypted );
 	}
 }

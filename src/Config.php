@@ -4,6 +4,8 @@ namespace DebugHawk;
 
 /**
  * @property boolean $enabled
+ * @property float $sample_rate
+ * @property string $secret
  * @property boolean $trace_admin_pages
  */
 class Config {

@@ -3,7 +3,7 @@ import Bowser from "bowser";
 
 const DebugHawk = {
     beaconSent: false,
-    timestamp: Math.floor(Date.now() / 1000),
+    sessionStart: Math.floor(Date.now() / 1000),
     queue: new Set(),
 
     init(config) {
@@ -43,26 +43,31 @@ const DebugHawk = {
     },
 
     preparePayload(payload) {
-        this.queue.forEach((value) => {
-            payload[value.name.toLowerCase()] = value.value;
-        });
-
-        payload.device = this.getDeviceInfo();
-
-        if (payload.page_cache?.timestamp) {
-            payload.page_cache.age = this.timestamp - payload.page_cache.timestamp;
-        }
+        payload.browser = this.getBrowserMeasurements();
+        payload.user = this.getUserInfo();
 
         return payload;
     },
 
-    getDeviceInfo() {
+    getBrowserMeasurements() {
+        let measurements = {};
+
+        this.queue.forEach((value) => {
+            measurements[value.name.toLowerCase()] = value.value;
+        });
+
+        return measurements;
+    },
+
+    getUserInfo() {
         const browser = Bowser.getParser(window.navigator.userAgent);
 
         return {
             browser: browser.getBrowser(),
             os: browser.getOS(),
-            type: browser.getPlatformType(),
+            platform: browser.getPlatformType(),
+            session_start: this.sessionStart,
+            session_end: Math.floor(Date.now() / 1000),
         };
     },
 
