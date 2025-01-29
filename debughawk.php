@@ -6,6 +6,7 @@
  * Author:       Ashley Rich
  * Version:      0.1
  * Requires PHP: 7.4
+ * Requires WP:  6.3
  */
 
 use DebugHawk\Config;
