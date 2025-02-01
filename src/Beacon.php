@@ -42,9 +42,13 @@ class Beacon {
 	protected function print_metrics(): void {
 		global $wpdb, $wp_object_cache;
 
-		$time = 0;
-		foreach ( $wpdb->queries as $query ) {
-			$time += $query[1];
+		$database_time = null;
+		if ( $wpdb->queries ) {
+			$database_time = 0;
+
+			foreach ( $wpdb->queries as $query ) {
+				$database_time += $query[1];
+			}
 		}
 
 		if ( is_object( $wp_object_cache ) ) {
@@ -63,7 +67,7 @@ class Beacon {
 
 		$payload = [
 			'database'     => [
-				'execution_time' => $time * 1000,
+				'execution_time' => $database_time ? $database_time * 1000 : null,
 				'query_count'    => $wpdb->num_queries,
 			],
 			'http'         => [
