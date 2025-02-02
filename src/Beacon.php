@@ -5,6 +5,7 @@ namespace DebugHawk;
 class Beacon {
 	public Config $config;
 	public ScriptManager $script;
+	public array $api_calls = [];
 
 	public function __construct( Config $config, ScriptManager $script ) {
 		$this->config = $config;
@@ -12,6 +13,10 @@ class Beacon {
 	}
 
 	public function init(): void {
+		add_filter( 'http_request_args', array( $this, 'make_request_traceable' ), 9999, 2 );
+		add_filter( 'pre_http_request', array( $this, 'track_request_start' ), 9999, 3 );
+		add_filter( 'http_response', array( $this, 'track_request_end' ), 9999, 3 );
+
 		$this->script->enqueue( 'debughawk-beacon', 'beacon.js' );
 		add_action( 'wp_print_footer_scripts', array( $this, 'maybe_print_metrics' ), 9999 );
 
@@ -19,6 +24,43 @@ class Beacon {
 			$this->script->enqueue_admin( 'debughawk-beacon', 'beacon.js' );
 			add_action( 'admin_print_footer_scripts', array( $this, 'maybe_print_metrics' ), 9999 );
 		}
+	}
+
+	public function make_request_traceable( $args, $url ) {
+		$args['_debughawk_request_id'] = uniqid( 'http_', true );
+
+		return $args;
+	}
+
+	public function track_request_start( $preempt, $args, $url ) {
+		$request_id = $args['_debughawk_request_id'] ?? null;
+
+		if ( ! $request_id ) {
+			return $preempt;
+		}
+
+		$this->api_calls[ $request_id ] = [
+			'url'         => $url,
+			'start_time'  => microtime( true ),
+			'http_method' => $args['method'] ?? 'GET',
+		];
+
+		return $preempt;
+	}
+
+	public function track_request_end( $response, $args, $url ) {
+		$request_id = $args['_debughawk_request_id'] ?? null;
+
+		if ( ! $request_id || ! isset( $this->api_calls[ $request_id ] ) ) {
+			return $response;
+		}
+
+		$duration = microtime( true ) - $this->api_calls[ $request_id ]['start_time'];
+
+		$this->api_calls[ $request_id ]['duration']    = $duration * 1000;
+		$this->api_calls[ $request_id ]['http_status'] = wp_remote_retrieve_response_code( $response );
+
+		return $response;
 	}
 
 	public function maybe_print_metrics(): void {
@@ -94,6 +136,7 @@ class Beacon {
 				'post_id'   => is_singular() ? get_the_ID() : null,
 				'post_type' => is_singular() ? get_post_type() : null,
 				'version'   => get_bloginfo( 'version' ),
+				'api_calls' => $this->api_calls,
 			],
 		];
 
