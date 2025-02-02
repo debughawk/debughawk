@@ -5,7 +5,7 @@ namespace DebugHawk;
 class Beacon {
 	public Config $config;
 	public ScriptManager $script;
-	public array $api_calls = [];
+	public array $http_requests = [];
 
 	public function __construct( Config $config, ScriptManager $script ) {
 		$this->config = $config;
@@ -39,7 +39,7 @@ class Beacon {
 			return $preempt;
 		}
 
-		$this->api_calls[ $request_id ] = [
+		$this->http_requests[ $request_id ] = [
 			'url'         => $url,
 			'start_time'  => microtime( true ),
 			'http_method' => $args['method'] ?? 'GET',
@@ -51,14 +51,14 @@ class Beacon {
 	public function track_request_end( $response, $args, $url ) {
 		$request_id = $args['_debughawk_request_id'] ?? null;
 
-		if ( ! $request_id || ! isset( $this->api_calls[ $request_id ] ) ) {
+		if ( ! $request_id || ! isset( $this->http_requests[ $request_id ] ) ) {
 			return $response;
 		}
 
-		$duration = microtime( true ) - $this->api_calls[ $request_id ]['start_time'];
+		$duration = microtime( true ) - $this->http_requests[ $request_id ]['start_time'];
 
-		$this->api_calls[ $request_id ]['duration']    = $duration * 1000;
-		$this->api_calls[ $request_id ]['http_status'] = wp_remote_retrieve_response_code( $response );
+		$this->http_requests[ $request_id ]['duration']    = $duration * 1000;
+		$this->http_requests[ $request_id ]['http_status'] = wp_remote_retrieve_response_code( $response );
 
 		return $response;
 	}
@@ -132,11 +132,11 @@ class Beacon {
 				'version'        => phpversion(),
 			],
 			'wordpress'    => [
-				'is_admin'  => is_admin(),
-				'post_id'   => is_singular() ? get_the_ID() : null,
-				'post_type' => is_singular() ? get_post_type() : null,
-				'version'   => get_bloginfo( 'version' ),
-				'api_calls' => $this->api_calls,
+				'is_admin'      => is_admin(),
+				'post_id'       => is_singular() ? get_the_ID() : null,
+				'post_type'     => is_singular() ? get_post_type() : null,
+				'version'       => get_bloginfo( 'version' ),
+				'http_requests' => $this->http_requests,
 			],
 		];
 
