@@ -2,10 +2,19 @@
 
 namespace DebugHawk;
 
+use DebugHawk\Collectors\ConfigCollector;
+use DebugHawk\Collectors\DatabaseCollector;
+use DebugHawk\Collectors\ExternalRequestsCollector;
+use DebugHawk\Collectors\ObjectCacheCollector;
+use DebugHawk\Collectors\PageCacheCollector;
+use DebugHawk\Collectors\PhpCollector;
+use DebugHawk\Collectors\RequestCollector;
+use DebugHawk\Collectors\WordpressCollector;
+
 class Beacon {
-	public Config $config;
-	public ScriptManager $script;
-	public array $http_requests = [];
+	protected Config $config;
+	protected ScriptManager $script;
+	protected array $collectors = [];
 
 	public function __construct( Config $config, ScriptManager $script ) {
 		$this->config = $config;
@@ -13,140 +22,68 @@ class Beacon {
 	}
 
 	public function init(): void {
-		add_filter( 'http_request_args', array( $this, 'make_request_traceable' ), 9999, 2 );
-		add_filter( 'pre_http_request', array( $this, 'track_request_start' ), 9999, 3 );
-		add_filter( 'http_response', array( $this, 'track_request_end' ), 9999, 3 );
+		$this->collectors['config']            = new ConfigCollector( $this->config );
+		$this->collectors['database']          = new DatabaseCollector( $this->config );
+		$this->collectors['external_requests'] = new ExternalRequestsCollector();
+		$this->collectors['object_cache']      = new ObjectCacheCollector();
+		$this->collectors['page_cache']        = new PageCacheCollector();
+		$this->collectors['php']               = new PhpCollector();
+		$this->collectors['request']           = new RequestCollector();
+		$this->collectors['wordpress']         = new WordpressCollector();
+
+		foreach ( $this->collectors as $collector ) {
+			if ( method_exists( $collector, 'init' ) ) {
+				$collector->init();
+			}
+		}
 
 		$this->script->enqueue( 'debughawk-beacon', 'beacon.js' );
-		add_action( 'wp_print_footer_scripts', array( $this, 'maybe_print_metrics' ), 9999 );
+		add_action( 'wp_print_footer_scripts', [ $this, 'print_metrics' ], 9999 );
 
 		if ( $this->config->trace_admin_pages ) {
 			$this->script->enqueue_admin( 'debughawk-beacon', 'beacon.js' );
-			add_action( 'admin_print_footer_scripts', array( $this, 'maybe_print_metrics' ), 9999 );
+			add_action( 'admin_print_footer_scripts', [ $this, 'print_metrics' ], 9999 );
 		}
 	}
 
-	public function make_request_traceable( $args, $url ) {
-		$args['_debughawk_request_id'] = uniqid( 'http_', true );
-
-		return $args;
-	}
-
-	public function track_request_start( $preempt, $args, $url ) {
-		$request_id = $args['_debughawk_request_id'] ?? null;
-
-		if ( ! $request_id ) {
-			return $preempt;
-		}
-
-		$this->http_requests[ $request_id ] = [
-			'url'         => $url,
-			'start_time'  => microtime( true ),
-			'http_method' => $args['method'] ?? 'GET',
-		];
-
-		return $preempt;
-	}
-
-	public function track_request_end( $response, $args, $url ) {
-		$request_id = $args['_debughawk_request_id'] ?? null;
-
-		if ( ! $request_id || ! isset( $this->http_requests[ $request_id ] ) ) {
-			return $response;
-		}
-
-		$duration = microtime( true ) - $this->http_requests[ $request_id ]['start_time'];
-
-		$this->http_requests[ $request_id ]['duration']    = $duration * 1000;
-		$this->http_requests[ $request_id ]['http_status'] = wp_remote_retrieve_response_code( $response );
-
-		return $response;
-	}
-
-	public function maybe_print_metrics(): void {
-		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+	public function print_metrics(): void {
+		if ( ! $this->should_print_metrics() ) {
 			return;
 		}
 
-		// Don't dispatch during a Customizer preview request:
-		if ( function_exists( 'is_customize_preview' ) && is_customize_preview() ) {
-			return;
+		$metrics = [];
+
+		foreach ( $this->collectors as $key => $collector ) {
+			$metrics[ $key ] = $collector->collect();
 		}
 
-		// Don't dispatch inside the Site Editor:
-		if ( isset( $_SERVER['SCRIPT_NAME'] ) && '/wp-admin/site-editor.php' === $_SERVER['SCRIPT_NAME'] ) {
-			return;
-		}
-
-		$this->print_metrics();
-	}
-
-	protected function print_metrics(): void {
-		global $wpdb, $wp_object_cache;
-
-		$database_time = null;
-		if ( $wpdb->queries ) {
-			$database_time = 0;
-
-			foreach ( $wpdb->queries as $query ) {
-				$database_time += $query[1];
-			}
-		}
-
-		if ( is_object( $wp_object_cache ) ) {
-			$object_vars = get_object_vars( $wp_object_cache );
-
-			if ( array_key_exists( 'cache_hits', $object_vars ) ) {
-				$cache_hits = (int) $object_vars['cache_hits'];
-			}
-
-			if ( array_key_exists( 'cache_misses', $object_vars ) ) {
-				$cache_misses = (int) $object_vars['cache_misses'];
-			}
-		}
-
-		$scheme = is_ssl() ? 'https' : 'http';
-
-		$payload = [
-			'database'     => [
-				'execution_time' => $database_time ? $database_time * 1000 : null,
-				'query_count'    => $wpdb->num_queries,
-			],
-			'http'         => [
-				'url'    => sprintf( '%s://%s%s', $scheme, $_SERVER['HTTP_HOST'], $_SERVER['REQUEST_URI'] ),
-				'method' => $_SERVER['REQUEST_METHOD'],
-				'status' => http_response_code(),
-			],
-			'object_cache' => [
-				'enabled'      => (bool) wp_using_ext_object_cache(),
-				'cache_hits'   => $cache_hits ?? null,
-				'cache_misses' => $cache_misses ?? null,
-			],
-			'page_cache'   => [
-				'identifier' => uniqid(),
-				'timestamp'  => time(),
-			],
-			'php'          => [
-				'execution_time' => ( microtime( true ) - $_SERVER['REQUEST_TIME_FLOAT'] ) * 1000,
-				'memory_usage'   => memory_get_peak_usage(),
-				'version'        => phpversion(),
-			],
-			'wordpress'    => [
-				'is_admin'      => is_admin(),
-				'post_id'       => is_singular() ? get_the_ID() : null,
-				'post_type'     => is_singular() ? get_post_type() : null,
-				'version'       => get_bloginfo( 'version' ),
-				'http_requests' => $this->http_requests,
-			],
-		];
+		$metrics = apply_filters( 'debughawk_beacon_metrics', $metrics );
 
 		echo '<!-- Begin DebugHawk output -->' . "\n\n";
 		echo '<script>';
 		echo 'window.DebugHawkMetrics = { ';
-		echo 'server: "' . $this->encrypt_payload( json_encode( $payload ) ) . '"';
+		echo 'server: "' . $this->encrypt_payload( json_encode( $metrics ) ) . '"';
 		echo ' };';
 		echo '</script>';
 		echo '<!-- End DebugHawk output -->' . "\n\n";
+	}
+
+	protected function should_print_metrics(): bool {
+		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+			return false;
+		}
+
+		// Don't dispatch during a Customizer preview request:
+		if ( function_exists( 'is_customize_preview' ) && is_customize_preview() ) {
+			return false;
+		}
+
+		// Don't dispatch inside the Site Editor:
+		if ( isset( $_SERVER['SCRIPT_NAME'] ) && '/wp-admin/site-editor.php' === $_SERVER['SCRIPT_NAME'] ) {
+			return false;
+		}
+
+		return apply_filters( 'debughawk_beacon_should_print_metrics', true );
 	}
 
 	protected function encrypt_payload( string $payload ): string {

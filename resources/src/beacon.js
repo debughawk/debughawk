@@ -3,7 +3,7 @@ import Bowser from "bowser";
 
 const DebugHawk = {
     beaconSent: false,
-    sessionStart: Math.floor(Date.now() / 1000),
+    sessionStart: performance.now(),
     queue: new Set(),
 
     init(config) {
@@ -13,6 +13,7 @@ const DebugHawk = {
 
         this.initBrowserMetrics();
 
+        // Report all available metrics whenever the page is backgrounded or unloaded
         addEventListener('visibilitychange', () => this.sendBeacon(config));
     },
 
@@ -43,31 +44,66 @@ const DebugHawk = {
     },
 
     preparePayload(payload) {
-        payload.browser = this.getBrowserMeasurements();
+        payload.browser = this.getBrowserMetrics();
         payload.user = this.getUserInfo();
 
         return payload;
     },
 
-    getBrowserMeasurements() {
-        let measurements = {};
+    getBrowserMetrics() {
+        let metrics = {};
 
-        this.queue.forEach((value) => {
-            measurements[value.name.toLowerCase()] = value.value;
+        this.queue.forEach((metric) => {
+            const name = metric.name.toLowerCase();
+
+            if (name !== 'cls') {
+                metrics[name + '_ms'] = this.roundToDecimals(metric.value);
+            } else {
+                metrics[name] = this.roundToDecimals(metric.value, 5);
+            }
+
+            if (name === 'ttfb' && metric.entries[0]) {
+                metrics = {...metrics, ...this.calculateTtfbMetrics(metric.entries[0])};
+            }
         });
 
-        return measurements;
+        return metrics;
+    },
+
+    calculateTtfbMetrics(navigationTiming) {
+        let metrics = {};
+
+        if (navigationTiming.domainLookupStart && navigationTiming.connectStart) {
+            metrics['dns_ms'] = this.roundToDecimals(navigationTiming.connectStart - navigationTiming.domainLookupStart);
+        }
+
+        if (navigationTiming.connectStart && navigationTiming.connectEnd) {
+            metrics['connect_ms'] = this.roundToDecimals(navigationTiming.connectEnd - navigationTiming.connectStart);
+        }
+
+        if (navigationTiming.decodedBodySize) {
+            metrics['html_body_size'] = navigationTiming.decodedBodySize
+        }
+
+        if (navigationTiming.encodedBodySize) {
+            metrics['html_transfer_size'] = navigationTiming.encodedBodySize
+        }
+
+        return metrics;
     },
 
     getUserInfo() {
         const browser = Bowser.getParser(window.navigator.userAgent);
+        const sessionEnd = performance.now();
 
         return {
             browser: browser.getBrowser(),
-            os: browser.getOS(),
+            os: {
+                name: browser.getOSName(),
+                version: browser.getOSVersion(),
+            },
             platform: browser.getPlatformType(),
-            session_start: this.sessionStart,
-            session_end: Math.floor(Date.now() / 1000),
+            session_duration_ms: this.roundToDecimals(sessionEnd - this.sessionStart),
         };
     },
 
@@ -84,6 +120,11 @@ const DebugHawk = {
         onLCP(addToQueue);
         onTTFB(addToQueue);
     },
+
+    roundToDecimals(number, precision = 1) {
+        const multiplier = Math.pow(10, precision);
+        return Math.round(number * multiplier) / multiplier;
+    }
 };
 
 if (typeof window.DebugHawkConfig !== 'undefined') {

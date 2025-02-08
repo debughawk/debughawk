@@ -4,25 +4,25 @@ namespace DebugHawk;
 
 class ScriptManager {
 	public Config $config;
-	private $wp_scripts = array();
-	private $admin_scripts = array();
+	private $wp_scripts = [];
+	private $admin_scripts = [];
 
 	public function __construct( Config $config ) {
 		$this->config = $config;
 	}
 
 	public function enqueue( string $handle, string $src ): void {
-		$this->wp_scripts[] = array(
+		$this->wp_scripts[] = [
 			'handle' => $handle,
 			'src'    => "resources/dist/{$src}",
-		);
+		];
 	}
 
 	public function enqueue_admin( string $handle, string $src ): void {
-		$this->admin_scripts[] = array(
+		$this->admin_scripts[] = [
 			'handle' => $handle,
 			'src'    => "resources/dist/{$src}",
-		);
+		];
 	}
 
 	public function process(): void {
@@ -31,17 +31,17 @@ class ScriptManager {
 				wp_enqueue_script(
 					$script['handle'],
 					plugins_url( $script['src'], $this->config->path ),
-					array(),
+					[],
 					$this->config->version,
-					array(
+					[
 						'strategy' => 'async',
-					),
+					],
 				);
 
-				wp_localize_script( $script['handle'], 'DebugHawkConfig', array(
+				wp_localize_script( $script['handle'], 'DebugHawkConfig', [
 					'endpoint'    => $this->config->endpoint,
 					'sample_rate' => $this->config->sample_rate,
-				) );
+				] );
 			}
 		} );
 
@@ -55,10 +55,10 @@ class ScriptManager {
 					true,
 				);
 
-				wp_localize_script( $script['handle'], 'DebugHawkConfig', array(
+				wp_localize_script( $script['handle'], 'DebugHawkConfig', [
 					'endpoint'    => $this->config->endpoint,
 					'sample_rate' => $this->config->sample_rate,
-				) );
+				] );
 			}
 		} );
 	}

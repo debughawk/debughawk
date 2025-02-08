@@ -8,12 +8,16 @@ namespace DebugHawk;
  * @property float $sample_rate
  * @property string $secret
  * @property boolean $trace_admin_pages
+ * @property int $slow_queries_threshold
+ * @property int $slow_queries_limit
  */
 class Config {
 	private const DEFAULT_CONFIG = [
-		'enabled'           => true,
-		'sample_rate'       => 1,
-		'trace_admin_pages' => true,
+		'enabled'                => true,
+		'sample_rate'            => 1,
+		'trace_admin_pages'      => true,
+		'slow_queries_threshold' => 50, // 50 ms
+		'slow_queries_limit'     => 3,
 	];
 
 	private array $config;
