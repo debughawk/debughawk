@@ -19,9 +19,9 @@ class ObjectCacheCollector implements CollectorInterface {
 		}
 
 		return [
-			'enabled'      => (bool) wp_using_ext_object_cache(),
-			'cache_hits'   => $cache_hits ?? null,
-			'cache_misses' => $cache_misses ?? null,
+			'persistent_enabled' => (bool) wp_using_ext_object_cache(),
+			'cache_hits'         => $cache_hits ?? null,
+			'cache_misses'       => $cache_misses ?? null,
 		];
 	}
 }
