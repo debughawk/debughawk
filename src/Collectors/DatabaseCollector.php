@@ -51,9 +51,10 @@ class DatabaseCollector implements CollectorInterface {
 
 				if ( $query_time > $this->config->slow_queries_threshold ) {
 					$slow_queries[] = [
-						'sql' => strlen( $query[0] ) > 256
+						'sql'        => strlen( $query[0] ) > 256
 							? substr( $query[0], 0, 256 )
 							: $query[0],
+						'start_time' => $query[3],
 						'duration_ms' => $query_time,
 						'type'        => $query_type,
 					];
