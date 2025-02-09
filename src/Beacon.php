@@ -6,7 +6,6 @@ use DebugHawk\Collectors\ConfigCollector;
 use DebugHawk\Collectors\DatabaseCollector;
 use DebugHawk\Collectors\ExternalRequestsCollector;
 use DebugHawk\Collectors\ObjectCacheCollector;
-use DebugHawk\Collectors\PageCacheCollector;
 use DebugHawk\Collectors\PhpCollector;
 use DebugHawk\Collectors\RequestCollector;
 use DebugHawk\Collectors\WordpressCollector;
@@ -26,7 +25,6 @@ class Beacon {
 		$this->collectors['database']          = new DatabaseCollector( $this->config );
 		$this->collectors['external_requests'] = new ExternalRequestsCollector();
 		$this->collectors['object_cache']      = new ObjectCacheCollector();
-		$this->collectors['page_cache']        = new PageCacheCollector();
 		$this->collectors['php']               = new PhpCollector();
 		$this->collectors['request']           = new RequestCollector();
 		$this->collectors['wordpress']         = new WordpressCollector();

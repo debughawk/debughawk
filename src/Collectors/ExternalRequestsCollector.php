@@ -14,7 +14,16 @@ class ExternalRequestsCollector implements CollectorInterface {
 	}
 
 	public function collect(): array {
-		return $this->requests;
+		return [
+			'request_count' => count( $this->requests ),
+			'requests'      => array_map( static function ( $request ) {
+				$request['url'] = strlen( $request['url'] ) > 128
+					? substr( $request['url'], 0, 128 )
+					: $request['url'];
+
+				return $request;
+			}, $this->requests ),
+		];
 	}
 
 	public function make_request_traceable( $args, $url ) {

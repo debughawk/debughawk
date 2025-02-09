@@ -7,9 +7,11 @@ class RequestCollector implements CollectorInterface {
 		$scheme = is_ssl() ? 'https' : 'http';
 
 		return [
-			'url'    => sprintf( '%s://%s%s', $scheme, $_SERVER['HTTP_HOST'], $_SERVER['REQUEST_URI'] ),
-			'method' => $_SERVER['REQUEST_METHOD'],
-			'status' => http_response_code(),
+			'url'          => sprintf( '%s://%s%s', $scheme, $_SERVER['HTTP_HOST'], $_SERVER['REQUEST_URI'] ),
+			'method'       => $_SERVER['REQUEST_METHOD'],
+			'status'       => http_response_code(),
+			'identifier'   => uniqid(),
+			'timestamp_ms' => date_create()->format( 'Uv' ),
 		];
 	}
 }

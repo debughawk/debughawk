@@ -4,6 +4,7 @@ import Bowser from "bowser";
 const DebugHawk = {
     beaconSent: false,
     sessionStart: performance.now(),
+    timestamp_ms: Math.floor(Date.now()),
     queue: new Set(),
 
     init(config) {
@@ -68,6 +69,7 @@ const DebugHawk = {
         });
 
         metrics['requests'] = this.processNetworkRequests();
+        metrics['timestamp_ms'] = this.timestamp_ms;
 
         return metrics;
     },

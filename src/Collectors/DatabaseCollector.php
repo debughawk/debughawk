@@ -23,8 +23,12 @@ class DatabaseCollector implements CollectorInterface {
 		return [
 			'duration_ms'      => $this->execution_time,
 			'query_count'      => $wpdb->num_queries ?? null,
-			'slow_query_count' => count( $this->slow_queries ),
-			'slow_queries'     => array_slice( $this->slow_queries, 0, $this->config->slow_queries_limit ),
+			'slow_query_count' => is_array( $this->slow_queries )
+				? count( $this->slow_queries )
+				: null,
+			'slow_queries'     => is_array( $this->slow_queries )
+				? array_slice( $this->slow_queries, 0, $this->config->slow_queries_limit )
+				: null,
 			'query_types'      => $this->query_types,
 		];
 	}
@@ -47,7 +51,9 @@ class DatabaseCollector implements CollectorInterface {
 
 				if ( $query_time > $this->config->slow_queries_threshold ) {
 					$slow_queries[] = [
-						'sql'         => $query[0],
+						'sql' => strlen( $query[0] ) > 256
+							? substr( $query[0], 0, 256 )
+							: $query[0],
 						'duration_ms' => $query_time,
 						'type'        => $query_type,
 					];
