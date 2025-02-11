@@ -14,11 +14,21 @@ class Backtrace {
 		Collectors\PhpCollector::class,
 		Collectors\RequestCollector::class,
 		Collectors\WordpressCollector::class,
+		\WP_Hook::class,
+		\WP_Http::class,
+		\wpdb::class,
+		\QM_DB::class
 	];
 
-	protected array $target_functions = [];
-
-	protected array $ignored_functions = [];
+	protected array $ignored_functions = [
+		'apply_filters',
+		'download_url',
+		'include',
+		'include_once',
+		'require',
+		'require_once',
+		'wp_remote_fopen',
+	];
 
 	public function __construct( array $trace = null ) {
 		if ( is_null( $trace ) ) {
@@ -26,18 +36,6 @@ class Backtrace {
 		}
 
 		$this->trace = $trace;
-	}
-
-	public function find( array $functions ): Backtrace {
-		$this->target_functions = $functions;
-
-		return $this;
-	}
-
-	public function ignoring( array $functions ): Backtrace {
-		$this->ignored_functions = $functions;
-
-		return $this;
 	}
 
 	public function parse(): ?array {
@@ -52,13 +50,8 @@ class Backtrace {
 				continue;
 			}
 
-			if ( $found_frame ) {
-				break;
-			}
-
-			if ( isset( $frame['function'] ) && in_array( $frame['function'], $this->target_functions ) ) {
-				$found_frame = $frame;
-			}
+			$found_frame = $frame;
+			break;
 		}
 
 		return $found_frame
@@ -88,6 +81,8 @@ class Backtrace {
 			'component' => in_array( $component, [ 'stylesheet', 'template' ] ) ? 'theme' : $component,
 			'file'      => $frame['file'],
 			'line'      => $frame['line'] ?? null,
+			'function'  => $frame['function'] ?? null,
+			'class'     => $frame['class'] ?? null,
 			'plugin'    => $component === 'plugin' ? $this->determine_plugin( $frame['file'] ) : null,
 		] );
 	}

@@ -2,6 +2,7 @@
 
 namespace DebugHawk\Collectors;
 
+use DebugHawk\Backtrace;
 use DebugHawk\Config;
 use DebugHawk\Util;
 
@@ -15,10 +16,20 @@ class DatabaseCollector implements CollectorInterface {
 		$this->config = $config;
 	}
 
+	public function init(): void {
+		add_filter( 'log_query_custom_data', [ $this, 'track_slow_queries' ], 10, 5 );
+	}
+
 	public function collect(): array {
 		global $wpdb;
 
 		$this->parse_queries();
+
+		if ( is_array( $this->slow_queries ) ) {
+			usort( $this->slow_queries, static function ( $a, $b ) {
+				return $b['duration_ms'] <=> $a['duration_ms'];
+			} );
+		}
 
 		return [
 			'duration_ms'      => $this->execution_time,
@@ -33,12 +44,36 @@ class DatabaseCollector implements CollectorInterface {
 		];
 	}
 
+	public function track_slow_queries( $query_data, $query, $query_time, $query_callstack, $query_start ): array {
+		$query_time = Util::seconds_to_milliseconds( $query_time );
+
+		if ( $query_time > $this->config->slow_queries_threshold ) {
+			if ( is_null( $this->slow_queries ) ) {
+				$this->slow_queries = [];
+			}
+
+			$backtrace  = new Backtrace();
+			$query_type = $this->determine_query_type( $query );
+
+			$this->slow_queries[] = [
+				'sql'         => strlen( $query ) > 256
+					? substr( $query, 0, 256 )
+					: $query,
+				'start_time'  => $query_start,
+				'duration_ms' => $query_time,
+				'type'        => $query_type,
+				'backtrace'   => $backtrace->parse(),
+			];
+		}
+
+		return $query_data;
+	}
+
 	protected function parse_queries(): void {
 		global $wpdb;
 
 		if ( $wpdb->queries ) {
 			$execution_time = 0;
-			$slow_queries   = [];
 
 			$this->query_types = [];
 
@@ -48,25 +83,9 @@ class DatabaseCollector implements CollectorInterface {
 
 				$query_type = $this->determine_query_type( $query[0] );
 				$this->count_query_type( $query_type );
-
-				if ( $query_time > $this->config->slow_queries_threshold ) {
-					$slow_queries[] = [
-						'sql'        => strlen( $query[0] ) > 256
-							? substr( $query[0], 0, 256 )
-							: $query[0],
-						'start_time' => $query[3],
-						'duration_ms' => $query_time,
-						'type'        => $query_type,
-					];
-				}
 			}
 
-			usort( $slow_queries, static function ( $a, $b ) {
-				return $b['duration_ms'] <=> $a['duration_ms'];
-			} );
-
 			$this->execution_time = $execution_time;
-			$this->slow_queries = $slow_queries;
 		}
 	}
 

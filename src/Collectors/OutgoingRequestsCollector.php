@@ -6,22 +6,6 @@ use DebugHawk\Backtrace;
 use DebugHawk\Util;
 
 class OutgoingRequestsCollector implements CollectorInterface {
-	protected const BACKTRACE_FUNCTIONS = [
-		'wp_safe_remote_request',
-		'wp_safe_remote_get',
-		'wp_safe_remote_post',
-		'wp_safe_remote_head',
-		'wp_remote_request',
-		'wp_remote_get',
-		'wp_remote_post',
-		'wp_remote_head',
-	];
-
-	protected const BACKTRACE_IGNORED_FUNCTIONS = [
-		'wp_remote_fopen',
-		'download_url',
-	];
-
 	protected array $requests = [];
 
 	public function init(): void {
@@ -63,9 +47,7 @@ class OutgoingRequestsCollector implements CollectorInterface {
 			'blocking'    => $args['blocking'],
 			'start_time'  => microtime( true ),
 			'http_method' => $args['method'] ?? 'GET',
-			'backtrace'   => $backtrace->find( self::BACKTRACE_FUNCTIONS )
-			                           ->ignoring( self::BACKTRACE_IGNORED_FUNCTIONS )
-			                           ->parse(),
+			'backtrace'   => $backtrace->parse(),
 		];
 
 		return $preempt;
