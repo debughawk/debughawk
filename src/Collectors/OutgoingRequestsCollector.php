@@ -2,9 +2,26 @@
 
 namespace DebugHawk\Collectors;
 
+use DebugHawk\Backtrace;
 use DebugHawk\Util;
 
-class ExternalRequestsCollector implements CollectorInterface {
+class OutgoingRequestsCollector implements CollectorInterface {
+	protected const BACKTRACE_FUNCTIONS = [
+		'wp_safe_remote_request',
+		'wp_safe_remote_get',
+		'wp_safe_remote_post',
+		'wp_safe_remote_head',
+		'wp_remote_request',
+		'wp_remote_get',
+		'wp_remote_post',
+		'wp_remote_head',
+	];
+
+	protected const BACKTRACE_IGNORED_FUNCTIONS = [
+		'wp_remote_fopen',
+		'download_url',
+	];
+
 	protected array $requests = [];
 
 	public function init(): void {
@@ -17,8 +34,8 @@ class ExternalRequestsCollector implements CollectorInterface {
 		return [
 			'request_count' => count( $this->requests ),
 			'requests'      => array_map( static function ( $request ) {
-				$request['url'] = strlen( $request['url'] ) > 128
-					? substr( $request['url'], 0, 128 )
+				$request['url'] = strlen( $request['url'] ) > 256
+					? substr( $request['url'], 0, 256 )
 					: $request['url'];
 
 				return $request;
@@ -39,10 +56,16 @@ class ExternalRequestsCollector implements CollectorInterface {
 			return $preempt;
 		}
 
+		$backtrace = new Backtrace();
+
 		$this->requests[ $request_id ] = [
 			'url'         => $url,
+			'blocking'    => $args['blocking'],
 			'start_time'  => microtime( true ),
 			'http_method' => $args['method'] ?? 'GET',
+			'backtrace'   => $backtrace->find( self::BACKTRACE_FUNCTIONS )
+			                           ->ignoring( self::BACKTRACE_IGNORED_FUNCTIONS )
+			                           ->parse(),
 		];
 
 		return $preempt;

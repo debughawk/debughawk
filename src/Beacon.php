@@ -4,7 +4,7 @@ namespace DebugHawk;
 
 use DebugHawk\Collectors\ConfigCollector;
 use DebugHawk\Collectors\DatabaseCollector;
-use DebugHawk\Collectors\ExternalRequestsCollector;
+use DebugHawk\Collectors\OutgoingRequestsCollector;
 use DebugHawk\Collectors\ObjectCacheCollector;
 use DebugHawk\Collectors\PhpCollector;
 use DebugHawk\Collectors\RequestCollector;
@@ -23,7 +23,7 @@ class Beacon {
 	public function init(): void {
 		$this->collectors['config']            = new ConfigCollector( $this->config );
 		$this->collectors['database']          = new DatabaseCollector( $this->config );
-		$this->collectors['external_requests'] = new ExternalRequestsCollector();
+		$this->collectors['outgoing_requests'] = new OutgoingRequestsCollector();
 		$this->collectors['object_cache']      = new ObjectCacheCollector();
 		$this->collectors['php']               = new PhpCollector();
 		$this->collectors['request']           = new RequestCollector();
