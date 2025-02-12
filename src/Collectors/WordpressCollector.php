@@ -2,10 +2,12 @@
 
 namespace DebugHawk\Collectors;
 
-class WordpressCollector implements CollectorInterface {
-	public function collect(): array {
+class WordpressCollector extends Collector {
+	public string $key = 'wordpress';
+	
+	public function gather(): array {
 		$user_id = get_current_user_id();
-		
+
 		return [
 			'is_admin'  => is_admin(),
 			'post_id'   => is_singular() ? get_the_ID() : null,

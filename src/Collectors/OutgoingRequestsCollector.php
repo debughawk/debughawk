@@ -3,9 +3,12 @@
 namespace DebugHawk\Collectors;
 
 use DebugHawk\Backtrace;
+use DebugHawk\NeedsInitiatingInterface;
 use DebugHawk\Util;
 
-class OutgoingRequestsCollector implements CollectorInterface {
+class OutgoingRequestsCollector extends Collector implements NeedsInitiatingInterface {
+	public string $key = 'outgoing_requests';
+
 	protected array $requests = [];
 
 	public function init(): void {
@@ -14,7 +17,7 @@ class OutgoingRequestsCollector implements CollectorInterface {
 		add_filter( 'http_response', [ $this, 'track_request_end' ], 9999, 3 );
 	}
 
-	public function collect(): array {
+	public function gather(): array {
 		return [
 			'request_count' => count( $this->requests ),
 			'requests'      => array_map( static function ( $request ) {

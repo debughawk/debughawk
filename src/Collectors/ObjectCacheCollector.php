@@ -2,8 +2,10 @@
 
 namespace DebugHawk\Collectors;
 
-class ObjectCacheCollector implements CollectorInterface {
-	public function collect(): array {
+class ObjectCacheCollector extends Collector {
+	public string $key = 'object_cache';
+
+	public function gather(): array {
 		global $wp_object_cache;
 
 		if ( is_object( $wp_object_cache ) ) {

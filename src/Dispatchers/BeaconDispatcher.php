@@ -1,0 +1,62 @@
+<?php
+
+namespace DebugHawk\Dispatchers;
+
+use DebugHawk\NeedsInitiatingInterface;
+
+class BeaconDispatcher extends Dispatcher implements NeedsInitiatingInterface {
+	public function init(): void {
+		if ( ! $this->should_output_beacon() ) {
+			return;
+		}
+
+		add_action( 'wp_print_footer_scripts', [ $this, 'output_beacon_metrics' ], 9999 );
+		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_beacon' ] );
+
+		if ( $this->config->trace_admin_pages ) {
+			add_action( 'admin_print_footer_scripts', [ $this, 'output_beacon_metrics' ], 9999 );
+			add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_beacon' ] );
+		}
+	}
+
+	public function output_beacon_metrics(): void {
+		echo '<!-- Begin DebugHawk output -->' . "\n\n";
+		echo '<script>';
+		echo 'window.DebugHawkMetrics = { ';
+		echo 'server: "' . $this->gather_and_encrypt() . '"';
+		echo ' };';
+		echo '</script>';
+		echo '<!-- End DebugHawk output -->' . "\n\n";
+	}
+
+	protected function should_output_beacon(): bool {
+		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+			return false;
+		}
+
+		// Don't dispatch during a Customizer preview request:
+		if ( function_exists( 'is_customize_preview' ) && is_customize_preview() ) {
+			return false;
+		}
+
+		// Don't dispatch inside the Site Editor:
+		if ( isset( $_SERVER['SCRIPT_NAME'] ) && '/wp-admin/site-editor.php' === $_SERVER['SCRIPT_NAME'] ) {
+			return false;
+		}
+
+		return apply_filters( 'debughawk_should_output_beacon', true );
+	}
+
+	public function enqueue_beacon(): void {
+		$src = plugins_url( 'resources/dist/beacon.js', $this->config->path );
+
+		wp_enqueue_script( 'debughawk-beacon', $src, [], $this->config->version, [
+			'strategy' => 'async',
+		] );
+
+		wp_localize_script( 'debughawk-beacon', 'DebugHawkConfig', [
+			'endpoint'    => $this->config->endpoint,
+			'sample_rate' => $this->config->sample_rate,
+		] );
+	}
+}

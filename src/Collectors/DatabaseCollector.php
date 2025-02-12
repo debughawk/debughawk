@@ -3,24 +3,23 @@
 namespace DebugHawk\Collectors;
 
 use DebugHawk\Backtrace;
-use DebugHawk\Config;
+use DebugHawk\NeedsInitiatingInterface;
 use DebugHawk\Util;
 
-class DatabaseCollector implements CollectorInterface {
-	protected Config $config;
-	protected ?float $execution_time = null;
-	protected ?array $slow_queries = null;
-	protected ?array $query_types = null;
+class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
+	public string $key = 'database';
 
-	public function __construct( Config $config ) {
-		$this->config = $config;
-	}
+	protected ?float $execution_time = null;
+
+	protected ?array $slow_queries = null;
+
+	protected ?array $query_types = null;
 
 	public function init(): void {
 		add_filter( 'log_query_custom_data', [ $this, 'track_slow_queries' ], 10, 5 );
 	}
 
-	public function collect(): array {
+	public function gather(): array {
 		global $wpdb;
 
 		$this->parse_queries();

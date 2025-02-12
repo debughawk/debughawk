@@ -2,8 +2,10 @@
 
 namespace DebugHawk\Collectors;
 
-class RequestCollector implements CollectorInterface {
-	public function collect(): array {
+class RequestCollector extends Collector {
+	public string $key = 'request';
+	
+	public function gather(): array {
 		$scheme = is_ssl() ? 'https' : 'http';
 
 		return [
