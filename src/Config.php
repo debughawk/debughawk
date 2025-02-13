@@ -44,6 +44,10 @@ class Config {
 		return trailingslashit( $this->endpoint ) . $dispatcher;
 	}
 
+	public function is_within_sample_range(): bool {
+		return random_int( 1, 100 ) <= ( $this->sample_rate * 100 );
+	}
+
 	public function __get( string $name ) {
 		if ( array_key_exists( $name, $this->config ) ) {
 			return $this->config[ $name ];

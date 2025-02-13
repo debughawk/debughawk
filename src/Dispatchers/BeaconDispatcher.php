@@ -20,13 +20,12 @@ class BeaconDispatcher extends Dispatcher implements NeedsInitiatingInterface {
 	}
 
 	public function output_beacon_metrics(): void {
-		echo '<!-- Begin DebugHawk output -->' . "\n\n";
+		echo '<!-- DebugHawk -->' . "\n\n";
 		echo '<script>';
 		echo 'window.DebugHawkMetrics = { ';
 		echo 'server: "' . $this->gather_and_encrypt() . '"';
 		echo ' };';
 		echo '</script>';
-		echo '<!-- End DebugHawk output -->' . "\n\n";
 	}
 
 	protected function should_output_beacon(): bool {
