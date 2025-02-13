@@ -17,11 +17,13 @@ class RedirectDispatcher extends Dispatcher implements NeedsInitiatingInterface 
 		$metrics = $this->gather_and_encrypt();
 
 		$args = apply_filters( 'debughawk_send_redirect_metrics_args', [
-			'body'    => json_encode( [ 'server' => $metrics ] ),
-			'headers' => [
+			'body'     => json_encode( [ 'server' => $metrics ] ),
+			'headers'  => [
 				'Connection'   => 'keep-alive',
 				'Content-Type' => 'application/json',
 			],
+			'blocking' => false,
+			'timeout'  => 0.01,
 		], $location );
 
 		wp_remote_post( $this->config->dispatcherEndpoint( 'redirect' ), $args );
