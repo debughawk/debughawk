@@ -36,6 +36,14 @@ class Config {
 		return is_string( $this->endpoint ) && is_string( $this->secret );
 	}
 
+	public function dispatcherEndpoint( $dispatcher ): string {
+		if ( ! $this->configured() ) {
+			return '';
+		}
+
+		return trailingslashit( $this->endpoint ) . $dispatcher;
+	}
+
 	public function __get( string $name ) {
 		if ( array_key_exists( $name, $this->config ) ) {
 			return $this->config[ $name ];
