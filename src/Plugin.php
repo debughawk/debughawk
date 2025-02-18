@@ -34,7 +34,6 @@ class Plugin {
 			->add( new ObjectCacheCollector( $this->config ) )
 			->add( new PhpCollector( $this->config ) )
 			->add( new RequestCollector( $this->config ) )
-			->add( new RequestCollector( $this->config ) )
 			->add( new WordpressCollector( $this->config ) )
 			->init();
 
