@@ -56,6 +56,12 @@ class BeaconDispatcher extends Dispatcher implements NeedsInitiatingInterface {
 		wp_localize_script( 'debughawk-beacon', 'DebugHawkConfig', [
 			'endpoint'    => $this->config->dispatcherEndpoint( 'beacon' ),
 			'sample_rate' => $this->config->sample_rate,
+			'dirs'        => [
+				'admin'    => admin_url(),
+				'includes' => includes_url(),
+				'plugin'   => trailingslashit( WP_PLUGIN_URL ),
+				'theme'    => trailingslashit( get_theme_root_uri() ),
+			],
 		] );
 	}
 }

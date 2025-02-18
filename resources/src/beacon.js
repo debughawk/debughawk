@@ -3,23 +3,26 @@ import Bowser from "bowser";
 
 const DebugHawk = {
     beaconSent: false,
+    config: {},
     sessionStart: performance.now(),
     timestamp_ms: Math.floor(Date.now()),
     queue: new Set(),
 
     init(config) {
-        if (!this.shouldSendBeacon(config)) {
+        this.config = config;
+
+        if (!this.shouldSendBeacon()) {
             return;
         }
 
         this.initBrowserMetrics();
 
         // Report all available metrics whenever the page is backgrounded or unloaded
-        addEventListener('visibilitychange', () => this.sendBeacon(config));
+        addEventListener('visibilitychange', () => this.sendBeacon());
     },
 
-    shouldSendBeacon(config) {
-        const sampleRate = Number(config.sample_rate);
+    shouldSendBeacon() {
+        const sampleRate = Number(this.config.sample_rate);
 
         if (typeof sampleRate !== 'number' || sampleRate < 0 || sampleRate > 1) {
             console.warn('DebugHawk: Invalid sampling rate, defaulting to sending metrics');
@@ -32,14 +35,14 @@ const DebugHawk = {
         return Math.random() < sampleRate;
     },
 
-    sendBeacon(config) {
+    sendBeacon() {
         if (this.beaconSent || typeof window.DebugHawkMetrics === 'undefined' || document.visibilityState === 'visible') {
             return;
         }
 
         const payload = this.preparePayload(window.DebugHawkMetrics);
 
-        navigator.sendBeacon(config.endpoint, JSON.stringify(payload));
+        navigator.sendBeacon(this.config.endpoint, JSON.stringify(payload));
 
         this.beaconSent = true;
     },
@@ -107,6 +110,7 @@ const DebugHawk = {
             total_body_size: 0,
             total_transfer_size: 0,
             by_type: {},
+            by_component: {},
         };
 
         requests.forEach(request => {
@@ -124,6 +128,31 @@ const DebugHawk = {
             metrics.by_type[request.type].count++;
             metrics.by_type[request.type].body_size += request.body_size || 0;
             metrics.by_type[request.type].transfer_size += request.transfer_size || 0;
+
+            if (request.type === 'css' || request.type === 'js') {
+                const component = this.getComponentFromPerformanceEntry(request);
+
+                if (!metrics.by_component[component]) {
+                    metrics.by_component[component] = {};
+                }
+
+                if (!metrics.by_component[component][request.type]) {
+                    metrics.by_component[component][request.type] = {
+                        count: 0,
+                        blocking: 0,
+                        body_size: 0,
+                        transfer_size: 0
+                    };
+                }
+
+                metrics.by_component[component][request.type].count++;
+                metrics.by_component[component][request.type].body_size += request.body_size || 0;
+                metrics.by_component[component][request.type].transfer_size += request.transfer_size || 0;
+
+                if (request.blocking) {
+                    metrics.by_component[component][request.type].blocking++;
+                }
+            }
         });
 
         return metrics;
@@ -138,6 +167,24 @@ const DebugHawk = {
             blocking: entry.renderBlockingStatus === "blocking",
             status: entry.responseStatus,
         };
+    },
+
+    getComponentFromPerformanceEntry(entry) {
+        if (entry.url.startsWith(this.config.dirs.plugin)) {
+            const pluginName = entry.url.slice(this.config.dirs.plugin.length).split('/')[0];
+
+            return `plugin:${pluginName}`;
+        }
+
+        if (entry.url.startsWith(this.config.dirs.theme)) {
+            return 'theme';
+        }
+
+        if (entry.url.startsWith(this.config.dirs.admin) || entry.url.startsWith(this.config.dirs.includes)) {
+            return 'core';
+        }
+
+        return 'other';
     },
 
     getTypeFromPerformanceEntry(entry) {
