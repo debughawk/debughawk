@@ -1,15 +1,20 @@
-import {onCLS, onFCP, onINP, onLCP, onTTFB} from 'web-vitals';
+import {Metric, onCLS, onFCP, onINP, onLCP, onTTFB} from 'web-vitals';
+import {BrowserMetrics, Config, NetworkRequest, NetworkRequests, Payload, UserInfo} from "./types";
 import Bowser from "bowser";
 
-const DebugHawk = {
-    beaconSent: false,
-    config: {},
-    sessionStart: performance.now(),
-    timestamp_ms: Math.floor(Date.now()),
-    queue: new Set(),
+class DebugHawk {
+    private beaconSent: boolean;
+    private config: Config;
+    private sessionStart: number;
+    private timestamp_ms: number;
+    private queue: Set<Metric>;
 
-    init(config) {
+    constructor(config: Config) {
+        this.beaconSent = false;
         this.config = config;
+        this.sessionStart = performance.now();
+        this.timestamp_ms = Math.floor(Date.now());
+        this.queue = new Set();
 
         if (!this.shouldSendBeacon()) {
             return;
@@ -19,12 +24,12 @@ const DebugHawk = {
 
         // Report all available metrics whenever the page is backgrounded or unloaded
         addEventListener('visibilitychange', () => this.sendBeacon());
-    },
+    }
 
-    shouldSendBeacon() {
-        const sampleRate = Number(this.config.sample_rate);
+    private shouldSendBeacon(): boolean {
+        const sampleRate: number = Number(this.config.sample_rate);
 
-        if (typeof sampleRate !== 'number' || sampleRate < 0 || sampleRate > 1) {
+        if (sampleRate < 0 || sampleRate > 1) {
             console.warn('DebugHawk: Invalid sampling rate, defaulting to sending metrics');
             return true;
         }
@@ -33,52 +38,54 @@ const DebugHawk = {
         if (sampleRate === 0) return false;
 
         return Math.random() < sampleRate;
-    },
+    }
 
-    sendBeacon() {
-        if (this.beaconSent || typeof window.DebugHawkMetrics === 'undefined' || document.visibilityState === 'visible') {
+    private sendBeacon(): void {
+        if (this.beaconSent || typeof window.DebugHawk === 'undefined' || document.visibilityState === 'visible') {
             return;
         }
 
-        const payload = this.preparePayload(window.DebugHawkMetrics);
+        const payload: Payload = this.preparePayload();
 
         navigator.sendBeacon(this.config.endpoint, JSON.stringify(payload));
 
         this.beaconSent = true;
-    },
+    }
 
-    preparePayload(payload) {
-        payload.browser = this.getBrowserMetrics();
-        payload.user = this.getUserInfo();
+    private preparePayload(): Payload {
+        return {
+            server: window.DebugHawk,
+            browser: this.getBrowserMetrics(),
+            user: this.getUserInfo(),
+        };
+    }
 
-        return payload;
-    },
+    private getBrowserMetrics(): BrowserMetrics {
+        let metrics: Partial<BrowserMetrics> = {
+            requests: this.processNetworkRequests(),
+            timestamp_ms: this.timestamp_ms,
+        };
 
-    getBrowserMetrics() {
-        let metrics = {};
-
-        this.queue.forEach((metric) => {
+        this.queue.forEach((metric: Metric) => {
             const name = metric.name.toLowerCase();
 
             if (name !== 'cls') {
-                metrics[name + '_ms'] = this.roundToDecimals(metric.value);
+                (metrics as any)[name + '_ms'] = this.roundToDecimals(metric.value);
             } else {
                 metrics[name] = this.roundToDecimals(metric.value, 5);
             }
 
             if (name === 'ttfb' && metric.entries[0]) {
-                metrics = {...metrics, ...this.calculateTtfbMetrics(metric.entries[0])};
+                const ttfbMetrics = this.calculateTtfbMetrics(metric.entries[0] as PerformanceNavigationTiming);
+                Object.assign(metrics, ttfbMetrics);
             }
         });
 
-        metrics['requests'] = this.processNetworkRequests();
-        metrics['timestamp_ms'] = this.timestamp_ms;
+        return metrics as BrowserMetrics;
+    }
 
-        return metrics;
-    },
-
-    calculateTtfbMetrics(navigationTiming) {
-        let metrics = {};
+    private calculateTtfbMetrics(navigationTiming: PerformanceNavigationTiming): Partial<BrowserMetrics> {
+        let metrics: Partial<BrowserMetrics> = {};
 
         if (navigationTiming.domainLookupStart && navigationTiming.connectStart) {
             metrics['dns_ms'] = this.roundToDecimals(navigationTiming.connectStart - navigationTiming.domainLookupStart);
@@ -97,15 +104,19 @@ const DebugHawk = {
         }
 
         return metrics;
-    },
+    }
 
-    processNetworkRequests() {
-        const requests = new Set();
+    private processNetworkRequests(): NetworkRequests {
+        const requests = new Set<NetworkRequest>();
 
-        performance.getEntriesByType('navigation').forEach(entry => requests.add(this.processPerformanceEntry(entry)));
-        performance.getEntriesByType('resource').forEach(entry => requests.add(this.processPerformanceEntry(entry)));
+        performance.getEntriesByType('navigation').forEach(entry =>
+            requests.add(this.processPerformanceEntry(entry as PerformanceNavigationTiming))
+        );
+        performance.getEntriesByType('resource').forEach(entry =>
+            requests.add(this.processPerformanceEntry(entry as PerformanceResourceTiming))
+        );
 
-        let metrics = {
+        let metrics: NetworkRequests = {
             count: requests.size,
             total_body_size: 0,
             total_transfer_size: 0,
@@ -130,7 +141,7 @@ const DebugHawk = {
             metrics.by_type[request.type].transfer_size += request.transfer_size || 0;
 
             if (request.type === 'css' || request.type === 'js') {
-                const component = this.getComponentFromPerformanceEntry(request);
+                const component = this.getComponentFromNetworkRequest(request);
 
                 if (!metrics.by_component[component]) {
                     metrics.by_component[component] = {};
@@ -156,38 +167,38 @@ const DebugHawk = {
         });
 
         return metrics;
-    },
+    }
 
-    processPerformanceEntry(entry) {
+    private processPerformanceEntry(entry: PerformanceNavigationTiming | PerformanceResourceTiming): NetworkRequest {
         return {
             url: entry.name,
             type: this.getTypeFromPerformanceEntry(entry),
             body_size: entry.decodedBodySize,
             transfer_size: entry.encodedBodySize,
-            blocking: entry.renderBlockingStatus === "blocking",
+            blocking: (entry as any).renderBlockingStatus === "blocking",
             status: entry.responseStatus,
         };
-    },
+    }
 
-    getComponentFromPerformanceEntry(entry) {
-        if (entry.url.startsWith(this.config.dirs.plugin)) {
-            const pluginName = entry.url.slice(this.config.dirs.plugin.length).split('/')[0];
+    private getComponentFromNetworkRequest(networkRequest: NetworkRequest): string {
+        if (networkRequest.url.startsWith(this.config.dirs.plugin)) {
+            const pluginName = networkRequest.url.slice(this.config.dirs.plugin.length).split('/')[0];
 
             return `plugin:${pluginName}`;
         }
 
-        if (entry.url.startsWith(this.config.dirs.theme)) {
+        if (networkRequest.url.startsWith(this.config.dirs.theme)) {
             return 'theme';
         }
 
-        if (entry.url.startsWith(this.config.dirs.admin) || entry.url.startsWith(this.config.dirs.includes)) {
+        if (networkRequest.url.startsWith(this.config.dirs.admin) || networkRequest.url.startsWith(this.config.dirs.includes)) {
             return 'core';
         }
 
         return 'other';
-    },
+    }
 
-    getTypeFromPerformanceEntry(entry) {
+    private getTypeFromPerformanceEntry(entry: PerformanceNavigationTiming | PerformanceResourceTiming): string {
         if (entry.initiatorType === 'navigation' || entry.initiatorType === 'iframe') {
             return 'html';
         }
@@ -208,7 +219,7 @@ const DebugHawk = {
         const match = url.match(/\.([^.]+)$/);
         const ext = match ? match[1].toLowerCase() : '';
 
-        const types = {
+        const types: { [key: string]: string } = {
             // Styles
             'css': 'css',
 
@@ -244,14 +255,17 @@ const DebugHawk = {
         };
 
         return types[ext] || 'other';
-    },
+    }
 
-    getUserInfo() {
+    private getUserInfo(): UserInfo {
         const browser = Bowser.getParser(window.navigator.userAgent);
         const sessionEnd = performance.now();
 
         return {
-            browser: browser.getBrowser(),
+            browser: {
+                name: browser.getBrowserName(),
+                version: browser.getBrowserVersion(),
+            },
             os: {
                 name: browser.getOSName(),
                 version: browser.getOSVersion(),
@@ -259,13 +273,13 @@ const DebugHawk = {
             platform: browser.getPlatformType(),
             session_duration_ms: this.roundToDecimals(sessionEnd - this.sessionStart),
         };
-    },
+    }
 
-    addToQueue(metric) {
+    private addToQueue(metric: Metric): void {
         this.queue.add(metric);
-    },
+    }
 
-    initBrowserMetrics() {
+    private initBrowserMetrics(): void {
         const addToQueue = this.addToQueue.bind(this);
 
         onCLS(addToQueue);
@@ -273,14 +287,14 @@ const DebugHawk = {
         onINP(addToQueue);
         onLCP(addToQueue);
         onTTFB(addToQueue);
-    },
+    }
 
-    roundToDecimals(number, precision = 1) {
+    private roundToDecimals(number: number, precision: number = 1): number {
         const multiplier = Math.pow(10, precision);
         return Math.round(number * multiplier) / multiplier;
     }
-};
+}
 
 if (typeof window.DebugHawkConfig !== 'undefined') {
-    DebugHawk.init(window.DebugHawkConfig);
+    const debugHawk = new DebugHawk(window.DebugHawkConfig);
 }

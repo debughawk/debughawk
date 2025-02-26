@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "target": "ES6",
+    "strict": true,
+    "lib": [
+      "ES6",
+      "DOM"
+    ]
+  },
+  "include": [
+    "resources/src/**/*"
+  ]
+}

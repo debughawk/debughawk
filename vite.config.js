@@ -5,7 +5,7 @@ export default defineConfig({
     build: {
         outDir: 'resources/dist',
         lib: {
-            entry: resolve(__dirname, 'resources/src/beacon.js'),
+            entry: resolve(__dirname, 'resources/src/beacon.ts'),
             name: 'DebugHawk',
             fileName: 'beacon',
             formats: ['iife']
