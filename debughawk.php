@@ -4,7 +4,7 @@
  * Plugin URI:   https://deploymenthawk.com
  * Description:  DebugHawk helper plugin.
  * Author:       Ashley Rich
- * Version:      0.2
+ * Version:      0.3
  * Requires PHP: 7.4
  * Requires WP:  6.3
  */
@@ -21,7 +21,7 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 }
 
 $config  = defined( 'DEBUGHAWK_CONFIG' ) ? DEBUGHAWK_CONFIG : [];
-$version = '0.2';
+$version = '0.3';
 
 ( new Plugin(
 	new Config( $config, __FILE__, $version ),
