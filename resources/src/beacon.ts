@@ -71,11 +71,15 @@ class DebugHawk {
     }
 
     private shouldUseBeaconApi(): boolean {
-        if ('brave' in navigator) {
+        if (this.isBraveBrowser()) {
             return false;
         }
 
         return 'sendBeacon' in navigator;
+    }
+
+    private isBraveBrowser(): boolean {
+        return 'brave' in navigator;
     }
 
     private preparePayload(): Payload {
@@ -289,8 +293,8 @@ class DebugHawk {
 
         return {
             browser: {
-                name: browser.getBrowserName(),
-                version: browser.getBrowserVersion(),
+                name: this.isBraveBrowser() ? 'Brave' : browser.getBrowserName(),
+                version: this.isBraveBrowser() ? null : browser.getBrowserVersion(),
             },
             os: {
                 name: browser.getOSName(),

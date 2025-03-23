@@ -58,11 +58,11 @@ export interface BrowserMetrics {
 export interface UserInfo {
     browser: {
         name: string;
-        version: string;
+        version: string | null;
     },
     os: {
         name: string;
-        version: string;
+        version: string | null;
     },
     platform: string;
     session_duration_ms: number;
