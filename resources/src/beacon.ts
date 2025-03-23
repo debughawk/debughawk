@@ -46,10 +46,36 @@ class DebugHawk {
         }
 
         const payload: Payload = this.preparePayload();
+        const payloadJson = JSON.stringify(payload);
 
-        navigator.sendBeacon(this.config.endpoint, JSON.stringify(payload));
+        if (this.shouldUseBeaconApi()) {
+            navigator.sendBeacon(this.config.endpoint, payloadJson);
 
-        this.beaconSent = true;
+            this.beaconSent = true;
+        } else {
+            fetch(this.config.endpoint, {
+                method: 'POST',
+                body: payloadJson,
+                keepalive: true,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(() => {
+                    this.beaconSent = true;
+                })
+                .catch(error => {
+                    console.warn('DebugHawk: Fetch error', error);
+                });
+        }
+    }
+
+    private shouldUseBeaconApi(): boolean {
+        if ('brave' in navigator) {
+            return false;
+        }
+
+        return 'sendBeacon' in navigator;
     }
 
     private preparePayload(): Payload {
