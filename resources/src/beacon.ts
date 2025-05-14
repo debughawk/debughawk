@@ -151,6 +151,7 @@ class DebugHawk {
             total_body_size: 0,
             total_transfer_size: 0,
             by_type: {},
+            by_domain: {},
             by_component: {},
         };
 
@@ -173,6 +174,25 @@ class DebugHawk {
 
             if (request.blocking) {
                 metrics.by_type[request.type].blocking++;
+            }
+
+            const domain = this.getDomainFromUrl(request.url);
+
+            if (!metrics.by_domain[domain]) {
+                metrics.by_domain[domain] = {
+                    count: 0,
+                    blocking: 0,
+                    body_size: 0,
+                    transfer_size: 0
+                };
+            }
+
+            metrics.by_domain[domain].count++;
+            metrics.by_domain[domain].body_size += request.body_size || 0;
+            metrics.by_domain[domain].transfer_size += request.transfer_size || 0;
+
+            if (request.blocking) {
+                metrics.by_domain[domain].blocking++;
             }
 
             if (request.type === 'css' || request.type === 'js') {
@@ -231,6 +251,15 @@ class DebugHawk {
         }
 
         return 'other';
+    }
+
+    private getDomainFromUrl(url: string): string {
+        try {
+            const urlObj = new URL(url);
+            return urlObj.hostname;
+        } catch (e) {
+            return 'unknown';
+        }
     }
 
     private getTypeFromPerformanceEntry(entry: PerformanceNavigationTiming | PerformanceResourceTiming): string {

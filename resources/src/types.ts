@@ -36,6 +36,9 @@ export interface NetworkRequests {
     by_type: {
         [key: string]: TypeMetrics;
     };
+    by_domain: {
+        [key: string]: TypeMetrics;
+    };
     by_component: {
         [key: string]: {
             [key: string]: ComponentMetrics;
