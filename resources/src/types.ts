@@ -60,6 +60,10 @@ export interface UserInfo {
     browser: {
         name: string;
         version: string | null;
+        viewport: {
+            width: number | null;
+            height: number | null;
+        };
     },
     os: {
         name: string;

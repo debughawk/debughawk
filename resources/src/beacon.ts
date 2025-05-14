@@ -300,6 +300,10 @@ class DebugHawk {
             browser: {
                 name: this.isBraveBrowser() ? 'Brave' : browser.getBrowserName(),
                 version: this.isBraveBrowser() ? null : browser.getBrowserVersion(),
+                viewport: {
+                    width: window.visualViewport?.width ?? null,
+                    height: window.visualViewport?.height ?? null,
+                },
             },
             os: {
                 name: browser.getOSName(),
