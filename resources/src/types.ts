@@ -20,6 +20,7 @@ export interface NetworkRequest {
 
 export interface TypeMetrics {
     count: number;
+    blocking: number;
     body_size: number;
     transfer_size: number;
 }

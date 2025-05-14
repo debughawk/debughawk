@@ -161,6 +161,7 @@ class DebugHawk {
             if (!metrics.by_type[request.type]) {
                 metrics.by_type[request.type] = {
                     count: 0,
+                    blocking: 0,
                     body_size: 0,
                     transfer_size: 0
                 };
@@ -169,6 +170,10 @@ class DebugHawk {
             metrics.by_type[request.type].count++;
             metrics.by_type[request.type].body_size += request.body_size || 0;
             metrics.by_type[request.type].transfer_size += request.transfer_size || 0;
+
+            if (request.blocking) {
+                metrics.by_type[request.type].blocking++;
+            }
 
             if (request.type === 'css' || request.type === 'js') {
                 const component = this.getComponentFromNetworkRequest(request);
