@@ -47,6 +47,8 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 		$query_time = Util::seconds_to_milliseconds( $query_time );
 
 		if ( $query_time > $this->config->slow_queries_threshold ) {
+			$query = trim( $query );
+
 			if ( is_null( $this->slow_queries ) ) {
 				$this->slow_queries = [];
 			}
