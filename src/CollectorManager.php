@@ -8,7 +8,7 @@ class CollectorManager {
 	protected array $collectors = [];
 
 	public function add( Collector $collector ): CollectorManager {
-		$this->collectors[] = $collector;
+		$this->collectors[ $collector->key ] = $collector;
 
 		return $this;
 	}
@@ -31,5 +31,13 @@ class CollectorManager {
 		}
 
 		return $data;
+	}
+
+	public function __get( string $name ): ?Collector {
+		if ( array_key_exists( $name, $this->collectors ) ) {
+			return $this->collectors[ $name ];
+		}
+
+		return null;
 	}
 }

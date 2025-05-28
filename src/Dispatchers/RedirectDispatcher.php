@@ -10,12 +10,12 @@ class RedirectDispatcher extends Dispatcher implements NeedsInitiatingInterface 
 			return;
 		}
 
-		add_filter( 'wp_redirect', [ $this, 'send_redirect_metrics' ], 9999 );
+		add_filter( 'shutdown', [ $this, 'send_redirect_metrics' ], 9 );
 	}
 
-	public function send_redirect_metrics( $location ) {
-		if ( $this->is_ignored_uri() ) {
-			return $location;
+	public function send_redirect_metrics() {
+		if ( ! $this->collectors->request->is_redirect() || $this->is_ignored_uri() ) {
+			return;
 		}
 
 		$metrics = $this->gather_and_encrypt();
@@ -28,11 +28,9 @@ class RedirectDispatcher extends Dispatcher implements NeedsInitiatingInterface 
 			],
 			'blocking' => false,
 			'timeout'  => 0.01,
-		], $location );
+		] );
 
 		wp_remote_post( $this->config->dispatcherEndpoint( 'redirect' ), $args );
-
-		return $location;
 	}
 
 	public function should_send_redirect_metrics() {
