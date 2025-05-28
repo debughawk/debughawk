@@ -34,7 +34,7 @@ class RedirectDispatcher extends Dispatcher implements NeedsInitiatingInterface 
 	}
 
 	public function should_send_redirect_metrics() {
-		return apply_filters( 'debughawk_should_send_redirect_metrics', $this->config->is_within_sample_range() );
+		return apply_filters( 'debughawk_should_send_redirect_metrics', $this->config->trace_redirects && $this->config->is_within_sample_range() );
 	}
 
 	protected function is_ignored_uri(): bool {

@@ -8,6 +8,7 @@ namespace DebugHawk;
  * @property float $sample_rate
  * @property string $secret
  * @property boolean $trace_admin_pages
+ * @property boolean $trace_redirects
  * @property int $slow_queries_threshold
  * @property int $slow_queries_limit
  */
@@ -16,6 +17,7 @@ class Config {
 		'enabled'                => true,
 		'sample_rate'            => 1,
 		'trace_admin_pages'      => true,
+		'trace_redirects'        => false,
 		'slow_queries_threshold' => 50, // 50 ms
 		'slow_queries_limit'     => 3,
 	];
