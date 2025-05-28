@@ -21,6 +21,7 @@ class Plugin {
 
 	public function init(): void {
 		register_activation_hook( $this->config->path, array( $this, 'activate' ) );
+		register_deactivation_hook( $this->config->path, array( $this, 'deactivate' ) );
 
 		if ( ! $this->config->enabled || ! $this->config->configured() ) {
 			return;
@@ -52,6 +53,22 @@ class Plugin {
 		if ( function_exists( 'symlink' ) && ! file_exists( $db_file ) ) {
 			symlink( $plugin_path, $db_file );
 		}
+	}
+
+	public function deactivate(): void {
+		$db_file = trailingslashit( WP_CONTENT_DIR ) . 'db.php';
+
+		if ( ! file_exists( $db_file ) ) {
+			return;
+		}
+
+		$plugin_data = get_plugin_data( $db_file );
+
+		if ( empty( $plugin_data['AuthorURI'] ) || $plugin_data['AuthorURI'] !== 'https://debughawk.com/' ) {
+			return;
+		}
+
+		unlink( $db_file );
 	}
 
 }
