@@ -62,9 +62,9 @@ class Plugin {
 			return;
 		}
 
-		$plugin_data = get_plugin_data( $db_file );
+		$db_file_data = get_plugin_data( $db_file );
 
-		if ( empty( $plugin_data['AuthorURI'] ) || $plugin_data['AuthorURI'] !== 'https://debughawk.com/' ) {
+		if ( empty( $db_file_data['AuthorURI'] ) || $db_file_data['AuthorURI'] !== 'https://debughawk.com/' ) {
 			return;
 		}
 
