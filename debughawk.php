@@ -1,10 +1,10 @@
 <?php
 /*
  * Plugin Name: DebugHawk
- * Plugin URI:   https://deploymenthawk.com
- * Description:  DebugHawk helper plugin.
- * Author:       Ashley Rich
- * Version:      0.4.2
+ * Plugin URI:   https://debughawk.com/
+ * Description:  WordPress performance debugging and monitoring, simplified.
+ * Author:       DebugHawk
+ * Version:      0.5
  * Requires PHP: 7.4
  * Requires WP:  6.3
  */
@@ -21,7 +21,7 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 }
 
 $config  = defined( 'DEBUGHAWK_CONFIG' ) ? DEBUGHAWK_CONFIG : [];
-$version = '0.4.2';
+$version = '0.5';
 
 ( new Plugin(
 	new Config( $config, __FILE__, $version ),

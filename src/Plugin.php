@@ -20,6 +20,9 @@ class Plugin {
 	}
 
 	public function init(): void {
+		register_activation_hook( $this->config->path, array( $this, 'activate' ) );
+		register_deactivation_hook( $this->config->path, array( $this, 'deactivate' ) );
+
 		if ( ! $this->config->enabled || ! $this->config->configured() ) {
 			return;
 		}
@@ -42,4 +45,30 @@ class Plugin {
 			->add( new RedirectDispatcher( $this->config, $collectors ) )
 			->init();
 	}
+
+	public function activate(): void {
+		$db_file     = trailingslashit( WP_CONTENT_DIR ) . 'db.php';
+		$plugin_path = plugin_dir_path( $this->config->path ) . 'wp-content/db.php';
+
+		if ( function_exists( 'symlink' ) && ! file_exists( $db_file ) ) {
+			symlink( $plugin_path, $db_file );
+		}
+	}
+
+	public function deactivate(): void {
+		$db_file = trailingslashit( WP_CONTENT_DIR ) . 'db.php';
+
+		if ( ! file_exists( $db_file ) ) {
+			return;
+		}
+
+		$db_file_data = get_plugin_data( $db_file );
+
+		if ( empty( $db_file_data['AuthorURI'] ) || $db_file_data['AuthorURI'] !== 'https://debughawk.com/' ) {
+			return;
+		}
+
+		unlink( $db_file );
+	}
+
 }
