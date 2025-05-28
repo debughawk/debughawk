@@ -83,7 +83,7 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 				$execution_time += $query_time;
 
 				$query_type = $this->determine_query_type( $query[0] );
-				$this->count_query_type( $query_type );
+				$this->count_query_type( $query_type, $query_time );
 			}
 
 			$this->execution_time = $execution_time;
@@ -98,11 +98,15 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 		return 'OTHER';
 	}
 
-	protected function count_query_type( $type ): void {
+	protected function count_query_type( $type, $query_time ): void {
 		if ( ! isset( $this->query_types[ $type ] ) ) {
-			$this->query_types[ $type ] = 0;
+			$this->query_types[ $type ] = [
+				'count' => 0,
+				'time'  => 0,
+			];
 		}
 
-		$this->query_types[ $type ] ++;
+		$this->query_types[ $type ]['count'] ++;
+		$this->query_types[ $type ]['time'] += $query_time;
 	}
 }
