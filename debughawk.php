@@ -1,9 +1,9 @@
 <?php
 /*
  * Plugin Name: DebugHawk
- * Plugin URI:   https://deploymenthawk.com
- * Description:  DebugHawk helper plugin.
- * Author:       Ashley Rich
+ * Plugin URI:   https://debughawk.com/
+ * Description:  WordPress performance debugging and monitoring, simplified.
+ * Author:       DebugHawk
  * Version:      0.4.2
  * Requires PHP: 7.4
  * Requires WP:  6.3
