@@ -37,8 +37,27 @@ if ( is_admin() ) {
 	}
 }
 
-if ( file_exists( dirname( __FILE__, 2 ) . '/vendor/autoload.php' ) ) {
-	require_once dirname( __FILE__, 2 ) . '/vendor/autoload.php';
+class DebugHawkDB extends wpdb {
+
+	public function query( $query ) {
+		if ( ! defined( 'SAVEQUERIES' ) || ! SAVEQUERIES ) {
+			$this->timer_start();
+		}
+
+		$result = parent::query( $query );
+
+		if ( ! defined( 'SAVEQUERIES' ) || ! SAVEQUERIES ) {
+			$this->log_query(
+				$query,
+				$this->timer_stop(),
+				'',
+				$this->time_start,
+				[],
+			);
+		}
+
+		return $result;
+	}
 }
 
-$wpdb = new \DebugHawk\DB( DB_USER, DB_PASSWORD, DB_NAME, DB_HOST );
+$wpdb = new DebugHawkDB( DB_USER, DB_PASSWORD, DB_NAME, DB_HOST );

@@ -47,16 +47,15 @@ class Plugin {
 	}
 
 	public function activate(): void {
-		$db_file     = trailingslashit( WP_CONTENT_DIR ) . 'db.php';
-		$plugin_path = plugin_dir_path( $this->config->path ) . 'wp-content/db.php';
+		$db_file = WP_CONTENT_DIR . '/db.php';
 
-		if ( function_exists( 'symlink' ) && ! file_exists( $db_file ) ) {
-			symlink( $plugin_path, $db_file );
+		if ( is_writable( WP_CONTENT_DIR ) && ! file_exists( $db_file ) ) {
+			copy( plugin_dir_path( $this->config->path ) . 'wp-content/db.php', $db_file );
 		}
 	}
 
 	public function deactivate(): void {
-		$db_file = trailingslashit( WP_CONTENT_DIR ) . 'db.php';
+		$db_file = WP_CONTENT_DIR . '/db.php';
 
 		if ( ! file_exists( $db_file ) ) {
 			return;
