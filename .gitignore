@@ -1,7 +1,9 @@
+/.claude
 /.idea
 /.vscode
+/build/*
+!/build/.gitkeep
 /node_modules
 /resources/dist
 /vendor
 /composer.lock
-/*.zip
