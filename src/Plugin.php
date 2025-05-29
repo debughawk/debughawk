@@ -20,6 +20,8 @@ class Plugin {
 	}
 
 	public function init(): void {
+		add_action( 'admin_init', array( $this, 'maybe_update_dropin' ) );
+
 		register_activation_hook( $this->config->path, array( $this, 'activate' ) );
 		register_deactivation_hook( $this->config->path, array( $this, 'deactivate' ) );
 
@@ -44,6 +46,30 @@ class Plugin {
 			->add( new BeaconDispatcher( $this->config, $collectors ) )
 			->add( new RedirectDispatcher( $this->config, $collectors ) )
 			->init();
+	}
+
+	public function maybe_update_dropin(): void {
+		$db_file     = WP_CONTENT_DIR . '/db.php';
+		$plugin_file = plugin_dir_path( $this->config->path ) . 'wp-content/db.php';
+
+		if ( ! file_exists( $db_file ) ) {
+			return;
+		}
+
+		$dropin = get_plugin_data( $db_file );
+		$plugin = get_plugin_data( $plugin_file );
+
+		if ( $dropin['AuthorURI'] !== $plugin['AuthorURI'] ) {
+			return;
+		}
+
+		if ( version_compare( $dropin['Version'], $plugin['Version'], '>=' ) ) {
+			return;
+		}
+
+		if ( is_writable( WP_CONTENT_DIR ) ) {
+			copy( $plugin_file, $db_file );
+		}
 	}
 
 	public function activate(): void {
