@@ -14,7 +14,7 @@ class Backtrace {
 		Collectors\PhpCollector::class,
 		Collectors\RequestCollector::class,
 		Collectors\WordpressCollector::class,
-		DB::class,
+		\DebugHawkDB::class,
 		\WP_Hook::class,
 		\WP_Http::class,
 		\wpdb::class,
