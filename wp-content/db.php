@@ -2,7 +2,7 @@
 /*
 Plugin Name: DebugHawk Database Drop-In
 Description: Database drop-in for DebugHawk to capture database metrics and slow queries.
-Version: 0.5.3
+Version: 0.5.4
 Author: DebugHawk
 Author URI: https://debughawk.com/
 */
