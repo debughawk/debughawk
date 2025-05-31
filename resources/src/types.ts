@@ -47,6 +47,9 @@ export interface NetworkRequests {
 }
 
 export interface BrowserMetrics {
+    title: string;
+    requests: NetworkRequests;
+    timestamp_ms: number;
     cls?: number;
     connect_ms?: number;
     dns_ms?: number;
@@ -55,8 +58,6 @@ export interface BrowserMetrics {
     ttfb_ms?: number;
     html_body_size?: number;
     html_transfer_size?: number;
-    requests: NetworkRequests;
-    timestamp_ms: number;
 }
 
 export interface UserInfo {

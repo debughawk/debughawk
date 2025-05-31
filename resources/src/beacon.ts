@@ -92,6 +92,7 @@ class DebugHawk {
 
     private getBrowserMetrics(): BrowserMetrics {
         let metrics: Partial<BrowserMetrics> = {
+            title: document.title,
             requests: this.processNetworkRequests(),
             timestamp_ms: this.timestamp_ms,
         };
