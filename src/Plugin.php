@@ -20,10 +20,10 @@ class Plugin {
 	}
 
 	public function init(): void {
-		add_action( 'admin_init', array( $this, 'maybe_update_dropin' ) );
+		add_action( 'admin_init', [ $this, 'maybe_update_dropin' ] );
 
-		register_activation_hook( $this->config->path, array( $this, 'activate' ) );
-		register_deactivation_hook( $this->config->path, array( $this, 'deactivate' ) );
+		register_activation_hook( $this->config->path, [ $this, 'activate' ] );
+		register_deactivation_hook( $this->config->path, [ $this, 'deactivate' ] );
 
 		if ( ! $this->config->enabled || ! $this->config->configured() ) {
 			return;
