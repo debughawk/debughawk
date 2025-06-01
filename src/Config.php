@@ -17,7 +17,7 @@ class Config {
 		'enabled'                => true,
 		'sample_rate'            => 1,
 		'trace_admin_pages'      => true,
-		'trace_redirects'        => false,
+		'trace_redirects'        => true,
 		'slow_queries_threshold' => 50, // 50 ms
 		'slow_queries_limit'     => 3,
 	];
