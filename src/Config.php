@@ -50,6 +50,16 @@ class Config {
 		return random_int( 1, 100 ) <= ( $this->sample_rate * 100 );
 	}
 
+	public function to_array(): array {
+		$config = [];
+
+		foreach ( self::DEFAULT_CONFIG as $key => $value ) {
+			$config[ $key ] = $this->$key;
+		}
+
+		return $config;
+	}
+
 	public function __get( string $name ) {
 		if ( array_key_exists( $name, $this->config ) ) {
 			return $this->config[ $name ];

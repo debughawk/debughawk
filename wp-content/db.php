@@ -1,11 +1,16 @@
 <?php
-/*
-Plugin Name: DebugHawk Database Drop-In
-Description: Database drop-in for DebugHawk to capture database metrics and slow queries.
-Version: 0.5.4
-Author: DebugHawk
-Author URI: https://debughawk.com/
-*/
+/**
+ * Plugin Name: DebugHawk Database Drop-In
+ * Plugin URI: https://debughawk.com/
+ * Description: Database drop-in for DebugHawk to capture database metrics and slow queries.
+ * Author: DebugHawk
+ * Author URI: https://debughawk.com/
+ * Version: 0.5.4
+ * Requires PHP: 7.4
+ * Requires WP: 6.3
+ * License: GPLv3
+ * License URI: http://www.gnu.org/licenses/gpl-3.0.html
+ */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

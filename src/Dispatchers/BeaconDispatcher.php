@@ -36,7 +36,7 @@ class BeaconDispatcher extends Dispatcher implements NeedsInitiatingInterface {
 		}
 
 		// Don't dispatch inside the Site Editor:
-		if ( isset( $_SERVER['SCRIPT_NAME'] ) && '/wp-admin/site-editor.php' === $_SERVER['SCRIPT_NAME'] ) {
+		if ( isset( $_SERVER['SCRIPT_NAME'] ) && $_SERVER['SCRIPT_NAME'] === '/wp-admin/site-editor.php' ) {
 			return false;
 		}
 
