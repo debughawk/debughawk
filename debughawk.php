@@ -4,7 +4,6 @@
  * Plugin URI: https://debughawk.com/
  * Description: WordPress performance debugging and monitoring, simplified.
  * Author: DebugHawk
- * Author URI: https://debughawk.com/
  * Version: 0.5.4
  * Requires PHP: 7.4
  * Requires WP: 6.3
