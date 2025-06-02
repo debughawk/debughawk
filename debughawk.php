@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * Plugin Name: DebugHawk
  * Plugin URI:   https://debughawk.com/
  * Description:  WordPress performance debugging and monitoring, simplified.
@@ -7,6 +7,8 @@
  * Version:      0.5.4
  * Requires PHP: 7.4
  * Requires WP:  6.3
+ * License: GPLv3
+ * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
 
 use DebugHawk\Config;
