@@ -16,14 +16,13 @@ class BeaconDispatcher extends Dispatcher implements NeedsInitiatingInterface {
 		if ( $this->config->trace_admin_pages ) {
 			add_action( 'admin_print_footer_scripts', [ $this, 'output_beacon_metrics' ], 9999 );
 			add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_beacon' ] );
+			add_action( 'login_enqueue_scripts', [ $this, 'enqueue_beacon' ] );
 		}
 	}
 
 	public function output_beacon_metrics(): void {
 		echo '<!-- DebugHawk -->' . "\n\n";
-		echo '<script>';
-		echo 'window.DebugHawk = "' . $this->gather_and_encrypt() . '";';
-		echo '</script>';
+		wp_print_inline_script_tag( "window.DebugHawk = '" . esc_js( $this->gather_and_encrypt() ) . "';" );
 	}
 
 	protected function should_output_beacon(): bool {
