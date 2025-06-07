@@ -78,13 +78,15 @@ class Backtrace {
 			return null;
 		}
 
+		$component = in_array( $component, [ 'stylesheet', 'template' ] ) ? 'theme' : $component;
+
 		return array_filter( [
-			'component' => in_array( $component, [ 'stylesheet', 'template' ] ) ? 'theme' : $component,
+			'component' => $component,
 			'file'      => $frame['file'],
 			'line'      => $frame['line'] ?? null,
 			'function'  => $frame['function'] ?? null,
 			'class'     => $frame['class'] ?? null,
-			'plugin'    => $component === 'plugin' ? $this->determine_plugin( $frame['file'] ) : null,
+			'slug'      => $this->determine_slug( $component, $frame['file'] ),
 		] );
 	}
 
@@ -99,7 +101,19 @@ class Backtrace {
 		];
 	}
 
-	protected function determine_plugin( string $file ): ?string {
+	protected function determine_slug( string $component, string $file ): ?string {
+		if ( $component === 'plugin' ) {
+			return $this->determine_plugin_slug( $file );
+		}
+
+		if ( $component === 'theme' ) {
+			return $this->determine_theme_slug( $file );
+		}
+
+		return null;
+	}
+
+	protected function determine_plugin_slug( string $file ): ?string {
 		$plugin = plugin_basename( $file );
 
 		if ( strpos( $plugin, '/' ) ) {
@@ -110,5 +124,18 @@ class Backtrace {
 		}
 
 		return $plugin;
+	}
+
+	protected function determine_theme_slug( string $file ): ?string {
+		$theme_root = get_theme_root();
+
+		if ( strpos( $file, $theme_root ) !== 0 ) {
+			return null;
+		}
+
+		$relative_path = str_replace( trailingslashit( $theme_root ), '', $file );
+		$parts         = explode( '/', $relative_path );
+
+		return $parts[0] ?? null;
 	}
 }
