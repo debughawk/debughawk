@@ -10,7 +10,7 @@ License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 WordPress performance debugging and monitoring, simplified.
 
-## Description
+== Description ==
 
 WordPress performance debugging and monitoring, simplified. DebugHawk gives you deep insight into your WordPress site's front-end and back-end performance, with the clarity only a tool purpose-built for WordPress can offer.
 
