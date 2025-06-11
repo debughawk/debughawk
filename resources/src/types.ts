@@ -1,11 +1,13 @@
 export interface Config {
     endpoint: string;
     sample_rate: number | string;
-    dirs: {
+    urls: {
         admin: string;
+        home: string;
         includes: string;
         plugin: string;
         theme: string;
+        uploads: string;
     }
 }
 

@@ -196,29 +196,35 @@ class DebugHawk {
                 metrics.by_domain[domain].blocking++;
             }
 
-            if (request.type === 'css' || request.type === 'js') {
-                const component = this.getComponentFromNetworkRequest(request);
+            if (!request.url.startsWith(this.config.urls.home)) {
+                return;
+            }
 
-                if (!metrics.by_component[component]) {
-                    metrics.by_component[component] = {};
-                }
+            if (request.type === 'html' || request.type === 'other' || request.type === 'xhr') {
+                return;
+            }
 
-                if (!metrics.by_component[component][request.type]) {
-                    metrics.by_component[component][request.type] = {
-                        count: 0,
-                        blocking: 0,
-                        body_size: 0,
-                        transfer_size: 0
-                    };
-                }
+            const component = this.getComponentFromNetworkRequest(request);
 
-                metrics.by_component[component][request.type].count++;
-                metrics.by_component[component][request.type].body_size += request.body_size || 0;
-                metrics.by_component[component][request.type].transfer_size += request.transfer_size || 0;
+            if (!metrics.by_component[component]) {
+                metrics.by_component[component] = {};
+            }
 
-                if (request.blocking) {
-                    metrics.by_component[component][request.type].blocking++;
-                }
+            if (!metrics.by_component[component][request.type]) {
+                metrics.by_component[component][request.type] = {
+                    count: 0,
+                    blocking: 0,
+                    body_size: 0,
+                    transfer_size: 0
+                };
+            }
+
+            metrics.by_component[component][request.type].count++;
+            metrics.by_component[component][request.type].body_size += request.body_size || 0;
+            metrics.by_component[component][request.type].transfer_size += request.transfer_size || 0;
+
+            if (request.blocking) {
+                metrics.by_component[component][request.type].blocking++;
             }
         });
 
@@ -237,18 +243,24 @@ class DebugHawk {
     }
 
     private getComponentFromNetworkRequest(networkRequest: NetworkRequest): string {
-        if (networkRequest.url.startsWith(this.config.dirs.plugin)) {
-            const pluginName = networkRequest.url.slice(this.config.dirs.plugin.length).split('/')[0];
+        if (networkRequest.url.startsWith(this.config.urls.plugin)) {
+            const pluginName = networkRequest.url.slice(this.config.urls.plugin.length).split('/')[0];
 
             return `plugin:${pluginName}`;
         }
 
-        if (networkRequest.url.startsWith(this.config.dirs.theme)) {
-            return 'theme';
+        if (networkRequest.url.startsWith(this.config.urls.theme)) {
+            const themeName = networkRequest.url.slice(this.config.urls.theme.length).split('/')[0];
+
+            return `theme:${themeName}`;
         }
 
-        if (networkRequest.url.startsWith(this.config.dirs.admin) || networkRequest.url.startsWith(this.config.dirs.includes)) {
+        if (networkRequest.url.startsWith(this.config.urls.admin) || networkRequest.url.startsWith(this.config.urls.includes)) {
             return 'core';
+        }
+
+        if (networkRequest.url.startsWith(this.config.urls.uploads)) {
+            return 'upload';
         }
 
         return 'other';
