@@ -18,6 +18,13 @@ class ObjectCacheCollector extends Collector {
 			if ( array_key_exists( 'cache_misses', $object_vars ) ) {
 				$cache_misses = (int) $object_vars['cache_misses'];
 			}
+
+			if ( method_exists( $wp_object_cache, 'metrics' ) ) {
+				$metrics = $wp_object_cache->metrics();
+
+				$cache_hits   = $metrics->hits ?? null;
+				$cache_misses = $metrics->misses ?? null;
+			}
 		}
 
 		return [
