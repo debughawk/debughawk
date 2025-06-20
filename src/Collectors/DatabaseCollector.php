@@ -57,8 +57,8 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 			$query_type = $this->determine_query_type( $query );
 
 			$this->slow_queries[] = [
-				'sql'         => strlen( $query ) > 256
-					? substr( $query, 0, 256 )
+				'sql'         => strlen( $query ) > 1024
+					? substr( $query, 0, 1024 )
 					: $query,
 				'start_time'  => $query_start,
 				'duration_ms' => $query_time,
