@@ -60,6 +60,7 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 				'sql'         => strlen( $query ) > 1024
 					? substr( $query, 0, 1024 )
 					: $query,
+				'sql_hash'    => md5( $query ),
 				'start_time'  => $query_start,
 				'duration_ms' => $query_time,
 				'type'        => $query_type,
