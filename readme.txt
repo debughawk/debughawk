@@ -30,3 +30,11 @@ Here's an overview of what's tracked:
 * Object cache performance
 * Page cache effectiveness
 * Redirects
+
+== Development ==
+
+The TypeScript source files for this plugin are available in the plugin's directory at `resources/src/`. The distributed code is built using Vite and can be built using the following commands:
+
+* `npm install` - Install dependencies
+* `npm run build` - Build production assets
+* `npm run watch` - Watch and rebuild assets during development

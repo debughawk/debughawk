@@ -19,9 +19,13 @@ class RequestCollector extends Collector implements NeedsInitiatingInterface {
 	public function gather(): array {
 		$scheme = is_ssl() ? 'https' : 'http';
 
+		$host        = isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( $_SERVER['HTTP_HOST'] ) : '';
+		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( $_SERVER['REQUEST_URI'] ) : '';
+		$method      = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( $_SERVER['REQUEST_METHOD'] ) : '';
+
 		return array_filter( [
-			'url'               => sprintf( '%s://%s%s', $scheme, $_SERVER['HTTP_HOST'], $_SERVER['REQUEST_URI'] ),
-			'method'            => $_SERVER['REQUEST_METHOD'],
+			'url'               => sprintf( '%s://%s%s', $scheme, $host, $request_uri ),
+			'method'            => $method,
 			'status'            => $this->http_status_code ?? http_response_code(),
 			'redirect_location' => $this->redirect_location,
 			'identifier'        => uniqid(),

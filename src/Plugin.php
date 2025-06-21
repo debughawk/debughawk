@@ -49,6 +49,8 @@ class Plugin {
 	}
 
 	public function maybe_update_dropin(): void {
+		// Note: db.php is a WordPress drop-in that must be placed in WP_CONTENT_DIR
+		// This is the only way to extend wpdb functionality for query monitoring
 		$db_file     = WP_CONTENT_DIR . '/db.php';
 		$plugin_file = plugin_dir_path( $this->config->path ) . 'wp-content/db.php';
 
@@ -73,6 +75,8 @@ class Plugin {
 	}
 
 	public function activate(): void {
+		// Note: db.php is a WordPress drop-in that must be placed in WP_CONTENT_DIR
+		// This is the only way to extend wpdb functionality for query monitoring
 		$db_file = WP_CONTENT_DIR . '/db.php';
 
 		if ( is_writable( WP_CONTENT_DIR ) && ! file_exists( $db_file ) ) {
