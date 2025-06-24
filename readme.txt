@@ -31,6 +31,47 @@ Here's an overview of what's tracked:
 * Page cache effectiveness
 * Redirects
 
+== Installation ==
+
+1. Sign up for a [DebugHawk](https://debughawk.com) account.
+2. Upload the plugin files to the `/wp-content/plugins/debughawk` directory, or install the plugin through the 'Plugins' screen.
+3. Activate the plugin through the 'Plugins' screen.
+4. Configure the plugin by adding the configuration provided by DebugHawk to your `wp-config.php` file, above the line that says `/* That's all, stop editing! */`:
+
+```php
+define( 'DEBUGHAWK_CONFIG', [
+    'enabled' => true,
+    'endpoint' => '...',
+    'secret' => '...',
+] );
+```
+
+== Configuration ==
+
+You can further customize DebugHawk, with the following additional options:
+
+```php
+define('DEBUGHAWK_CONFIG', [
+    'enabled'  => true,
+    'endpoint' => '...',
+    'secret' => '...',
+    'sample_rate' => 0.25,           // Optional: Sampling rate (0-1, default: 1.0)
+    'slow_queries_threshold' => 50,  // Optional: Slow query threshold in ms (default: 50)
+    'trace_redirects' => true,       // Optional: Track redirects (default: true)
+    'trace_admin_pages' => true,     // Optional: Track admin pages (default: true)
+]);
+```
+
+== How It Works ==
+
+Once configured, DebugHawk automatically:
+
+1. **Monitors Performance** - Tracks PHP execution time, database queries, and memory usage on each page load
+2. **Collects Browser Metrics** - Injects a lightweight JavaScript beacon to collect Core Web Vitals and resource timing
+3. **Encrypts Data** - All collected data is encrypted before transmission
+
+The plugin works transparently without any additional user interaction after configuration.
+
 == Development ==
 
 The TypeScript source files for this plugin are available in the plugin's directory at `resources/src/`. The distributed code is built using Vite and can be built using the following commands:
