@@ -23,6 +23,7 @@ class Config {
 	];
 
 	private array $config;
+	private array $db_config;
 	public string $path;
 	public string $url;
 	public string $version;
@@ -32,10 +33,20 @@ class Config {
 		$this->path    = $path;
 		$this->url     = plugin_dir_url( $path );
 		$this->version = $version;
+
+		$this->db_config = $this->load_db_config();
+	}
+
+	private function load_db_config(): array {
+		if ( ! empty( $this->config ) ) {
+			return [];
+		}
+
+		return get_option( 'debughawk_config', [] );
 	}
 
 	public function configured(): bool {
-		return is_string( $this->endpoint ) && is_string( $this->secret );
+		return $this->endpoint && $this->secret;
 	}
 
 	public function dispatcherEndpoint( $dispatcher ): string {
@@ -63,6 +74,10 @@ class Config {
 	public function __get( string $name ) {
 		if ( array_key_exists( $name, $this->config ) ) {
 			return $this->config[ $name ];
+		}
+
+		if ( array_key_exists( $name, $this->db_config ) ) {
+			return $this->db_config[ $name ];
 		}
 
 		if ( array_key_exists( $name, self::DEFAULT_CONFIG ) ) {

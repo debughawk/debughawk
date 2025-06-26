@@ -25,6 +25,9 @@ class Plugin {
 		register_activation_hook( $this->config->path, [ $this, 'activate' ] );
 		register_deactivation_hook( $this->config->path, [ $this, 'deactivate' ] );
 
+		$settings = new Settings( $this->config );
+		$settings->init();
+
 		if ( ! $this->config->enabled || ! $this->config->configured() ) {
 			return;
 		}
