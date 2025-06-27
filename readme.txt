@@ -2,7 +2,7 @@
 Contributors:
 Tags: performance, monitoring, debug, debugging, query monitor
 Tested up to: 6.8
-Stable tag: 0.6
+Stable tag: 0.8
 Requires at least: 6.3
 Requires PHP: 7.4
 License: GPLv3
@@ -12,7 +12,7 @@ WordPress performance debugging and monitoring, simplified.
 
 == Description ==
 
-WordPress performance debugging and monitoring, simplified. DebugHawk gives you deep insight into your WordPress site's front-end and back-end performance, with the clarity only a tool purpose-built for WordPress can offer.
+WordPress performance debugging and monitoring, simplified. [DebugHawk](https://debughawk.com) gives you deep insight into your WordPress site's front-end and back-end performance, with the clarity only a tool purpose-built for WordPress can offer.
 
 Here's an overview of what's tracked:
 
