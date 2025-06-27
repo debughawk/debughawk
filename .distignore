@@ -1,11 +1,10 @@
 /.wordpress-org
 /.git
 /.github
+/build
 /node_modules
-/src
 /resources/src
 /tests
-/vendor
 
 .distignore
 .gitignore
@@ -25,8 +24,6 @@
 .phpunit.result.cache
 CLAUDE.md
 README.md
-composer.json
-composer.lock
 package.json
 package-lock.json
 phpunit.xml

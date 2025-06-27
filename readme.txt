@@ -2,7 +2,7 @@
 Contributors:
 Tags: performance, monitoring, debug, debugging, query monitor
 Tested up to: 6.8
-Stable tag: 0.8
+Stable tag: 0.8.1
 Requires at least: 6.3
 Requires PHP: 7.4
 License: GPLv3
