@@ -3,6 +3,11 @@ name: Deploy to WordPress.org
 on:
   release:
     types: [ released, prereleased ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to deploy'
+        required: true
 
 jobs:
   deploy_to_wp_repository:
