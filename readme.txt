@@ -38,7 +38,7 @@ Here's an overview of what's tracked:
 3. Activate the plugin through the 'Plugins' screen.
 4. Configure the plugin by adding the configuration provided by DebugHawk to your `wp-config.php` file, above the line that says `/* That's all, stop editing! */`:
 
-```php
+```
 define( 'DEBUGHAWK_CONFIG', [
     'enabled' => true,
     'endpoint' => '...',
@@ -50,7 +50,7 @@ define( 'DEBUGHAWK_CONFIG', [
 
 You can further customize DebugHawk, with the following additional options:
 
-```php
+```
 define('DEBUGHAWK_CONFIG', [
     'enabled'  => true,
     'endpoint' => '...',
@@ -71,11 +71,3 @@ Once configured, DebugHawk automatically:
 3. **Encrypts Data** - All collected data is encrypted before transmission
 
 The plugin works transparently without any additional user interaction after configuration.
-
-== Development ==
-
-The TypeScript source files for this plugin are available in the plugin's directory at `resources/src/`. The distributed code is built using Vite and can be built using the following commands:
-
-* `npm install` - Install dependencies
-* `npm run build` - Build production assets
-* `npm run watch` - Watch and rebuild assets during development
