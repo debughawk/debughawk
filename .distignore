@@ -3,7 +3,6 @@
 /.github
 /build
 /node_modules
-/resources/src
 /tests
 
 .distignore
