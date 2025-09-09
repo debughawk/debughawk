@@ -1,7 +1,7 @@
 === DebugHawk ===
 Contributors: A5hleyRich
 Tags: performance, monitoring, debug, debugging, query monitor
-Tested up to: 6.8
+Tested up to: 6.8.2
 Stable tag: 0.8.2
 Requires at least: 6.3
 Requires PHP: 7.4
