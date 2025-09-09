@@ -31,7 +31,7 @@ class Backtrace {
 		'wp_remote_fopen',
 	];
 
-	public function __construct( array $trace = null ) {
+	public function __construct( ?array $trace = null ) {
 		if ( is_null( $trace ) ) {
 			$trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS );
 		}

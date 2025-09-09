@@ -2,7 +2,7 @@
 Contributors: A5hleyRich
 Tags: performance, monitoring, debug, debugging, query monitor
 Tested up to: 6.8
-Stable tag: 0.8.1
+Stable tag: 0.8.2
 Requires at least: 6.3
 Requires PHP: 7.4
 License: GPLv3
@@ -49,6 +49,9 @@ Once configured, DebugHawk automatically:
 The plugin works transparently without any additional user interaction after configuration.
 
 == Changelog ==
+
+= 0.8.2 =
+* Fixed PHP 8.4 deprecation warning
 
 = 0.8.1 =
 * Initial release on WordPress.org

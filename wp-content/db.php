@@ -4,7 +4,7 @@
  * Plugin URI: https://debughawk.com/
  * Description: Database drop-in for DebugHawk to capture database metrics and slow queries.
  * Author: DebugHawk
- * Version: 0.8.1
+ * Version: 0.8.2
  * Requires PHP: 7.4
  * Requires WP: 6.3
  * License: GPLv3
