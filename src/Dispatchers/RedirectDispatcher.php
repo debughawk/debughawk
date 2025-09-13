@@ -45,6 +45,7 @@ class RedirectDispatcher extends Dispatcher implements NeedsInitiatingInterface 
 	protected function is_ignored_uri(): bool {
 		$ignored_uris = apply_filters( 'debughawk_ignored_redirect_uris', [
 			'/favicon.ico',
+			'/wp-login.php',
 		] );
 
 		return in_array( $_SERVER['REQUEST_URI'] ?? '', $ignored_uris, false );

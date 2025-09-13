@@ -2,7 +2,7 @@
 Contributors: A5hleyRich
 Tags: performance, monitoring, debug, debugging, query monitor
 Tested up to: 6.8.2
-Stable tag: 0.8.2
+Stable tag: 1.0.0
 Requires at least: 6.3
 Requires PHP: 7.4
 License: GPLv3
@@ -49,6 +49,10 @@ Once configured, DebugHawk automatically:
 The plugin works transparently without any additional user interaction after configuration.
 
 == Changelog ==
+
+= 1.0.0 =
+* Don't track /wp-login.php redirects
+* Official stable release
 
 = 0.8.2 =
 * Fixed PHP 8.4 deprecation warning

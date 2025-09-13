@@ -4,7 +4,7 @@
  * Plugin URI: https://debughawk.com/
  * Description: WordPress performance debugging and monitoring, simplified.
  * Author: DebugHawk
- * Version: 0.8.2
+ * Version: 1.0.0
  * Requires PHP: 7.4
  * Requires WP: 6.3
  * License: GPLv3
@@ -23,7 +23,7 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 }
 
 $config  = defined( 'DEBUGHAWK_CONFIG' ) ? DEBUGHAWK_CONFIG : [];
-$version = '0.8.2';
+$version = '1.0.0';
 
 ( new Plugin(
 	new Config( $config, __FILE__, $version ),
