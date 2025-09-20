@@ -15,7 +15,7 @@ class RedirectDispatcher extends Dispatcher implements NeedsInitiatingInterface 
 	}
 
 	public function send_redirect_metrics(): void {
-		if ( ! $this->collectors->request->is_redirect() || $this->is_ignored_uri() ) {
+		if ( ! $this->collectors->request->is_redirect() || $this->is_different_domain() || $this->is_ignored_uri() ) {
 			return;
 		}
 
@@ -40,6 +40,13 @@ class RedirectDispatcher extends Dispatcher implements NeedsInitiatingInterface 
 
 	public function should_send_redirect_metrics() {
 		return apply_filters( 'debughawk_should_send_redirect_metrics', $this->config->trace_redirects && $this->config->is_within_sample_range() );
+	}
+
+	protected function is_different_domain(): bool {
+		$host = isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( $_SERVER['HTTP_HOST'] ) : '';
+		$home = parse_url( home_url(), PHP_URL_HOST );
+
+		return strtolower($host) !== strtolower($home);
 	}
 
 	protected function is_ignored_uri(): bool {
