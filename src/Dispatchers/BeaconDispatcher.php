@@ -44,9 +44,7 @@ class BeaconDispatcher extends Dispatcher implements NeedsInitiatingInterface {
 	}
 
 	public function enqueue_beacon(): void {
-		$src = plugins_url( 'resources/dist/beacon.js', $this->config->path );
-
-		wp_enqueue_script( 'debughawk-beacon', $src, [], $this->config->version, [
+		wp_enqueue_script( 'debughawk-beacon', $this->config->script_url, [], null, [
 			'strategy' => 'async',
 		] );
 

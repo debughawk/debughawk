@@ -5,6 +5,7 @@ namespace DebugHawk;
 /**
  * @property boolean $enabled
  * @property string $endpoint
+ * @property string $script_url
  * @property float $sample_rate
  * @property string $secret
  * @property boolean $trace_admin_pages
@@ -15,6 +16,7 @@ namespace DebugHawk;
 class Config {
 	private const DEFAULT_CONFIG = [
 		'enabled'                => true,
+		'script_url'             => 'https://cdn.debughawk.com/script.js',
 		'sample_rate'            => 1,
 		'trace_admin_pages'      => true,
 		'trace_redirects'        => true,
