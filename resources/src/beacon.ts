@@ -275,6 +275,28 @@ class DebugHawk {
         }
     }
 
+    private getFileExtensionFromUrl(url: string): string {
+        try {
+            const urlObj = new URL(url);
+            const pathname = urlObj.pathname;
+            const lastDotIndex = pathname.lastIndexOf('.');
+
+            if (lastDotIndex === -1 || lastDotIndex === pathname.length - 1) {
+                return '';
+            }
+
+            const extension = pathname.substring(lastDotIndex + 1);
+
+            if (extension.includes('/')) {
+                return '';
+            }
+
+            return extension.toLowerCase();
+        } catch (e) {
+            return '';
+        }
+    }
+
     private getTypeFromPerformanceEntry(entry: PerformanceNavigationTiming | PerformanceResourceTiming): string {
         if (entry.initiatorType === 'navigation' || entry.initiatorType === 'iframe') {
             return 'html';
@@ -292,9 +314,7 @@ class DebugHawk {
             return 'xhr';
         }
 
-        const url = entry.name.replace(/\?.*$/, '');
-        const match = url.match(/\.([^.]+)$/);
-        const ext = match ? match[1].toLowerCase() : '';
+        const ext = this.getFileExtensionFromUrl(entry.name);
 
         const types: { [key: string]: string } = {
             // Styles

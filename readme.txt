@@ -1,8 +1,8 @@
 === DebugHawk ===
 Contributors: A5hleyRich
 Tags: performance, monitoring, debug, debugging, query monitor
-Tested up to: 6.8.2
-Stable tag: 1.0.1
+Tested up to: 6.8.3
+Stable tag: 1.1.0
 Requires at least: 6.3
 Requires PHP: 7.4
 License: GPLv3
@@ -49,6 +49,10 @@ Once configured, DebugHawk automatically:
 The plugin works transparently without any additional user interaction after configuration.
 
 == Changelog ==
+
+= 1.1.0 =
+* Beacon script now served from global CDN instead of locally from WordPress
+* Send DebugHawk plugin version as part of telemetry payload
 
 = 1.0.1 =
 * Only track redirects originating from the same domain
