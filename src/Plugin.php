@@ -64,7 +64,7 @@ class Plugin {
 		$dropin = get_plugin_data( $db_file );
 		$plugin = get_plugin_data( $plugin_file );
 
-		if ( $dropin['AuthorURI'] !== $plugin['AuthorURI'] ) {
+		if ( $dropin['PluginURI'] !== $plugin['PluginURI'] ) {
 			return;
 		}
 
@@ -96,7 +96,7 @@ class Plugin {
 
 		$db_file_data = get_plugin_data( $db_file );
 
-		if ( empty( $db_file_data['AuthorURI'] ) || $db_file_data['AuthorURI'] !== 'https://debughawk.com/' ) {
+		if ( empty( $db_file_data['PluginURI'] ) || $db_file_data['PluginURI'] !== 'https://debughawk.com/' ) {
 			return;
 		}
 
