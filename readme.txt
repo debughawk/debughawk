@@ -68,7 +68,7 @@ No impact on site performance - the monitoring overhead is negligible.
 
 1. Sign up for a free trial at [DebugHawk.com](https://debughawk.com)
 2. Install and activate this plugin
-3. Add your site key to `wp-config.php`
+3. Add your site configuration to `wp-config.php`
 4. Start monitoring your WordPress performance
 
 == Installation ==
