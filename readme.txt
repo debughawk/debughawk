@@ -1,7 +1,7 @@
 === DebugHawk - WordPress Performance Monitoring & Debugging ===
 Contributors: A5hleyRich
 Tags: performance, monitoring, debug, slow, speed, database, queries, core web vitals, optimization, profiling, cache, site health
-Tested up to: 6.8.3
+Tested up to: 6.9
 Stable tag: 1.1.1
 Requires at least: 6.3
 Requires PHP: 7.4
@@ -18,20 +18,20 @@ Monitor WordPress performance, debug slow sites, track Core Web Vitals, database
 
 Slow WordPress sites lose visitors, conversions, and search rankings. But identifying the root cause is difficult when frontend tools like Google PageSpeed Insights only show part of the picture.
 
-DebugHawk monitors both frontend and backend performance so you can see exactly what's slowing down your WordPress site - whether it's slow database queries, external API calls, memory issues, or frontend Core Web Vitals problems.
+DebugHawk monitors both frontend and backend performance so you can see exactly what's slowing down your WordPress site - whether it's slow database queries, external API calls, or frontend Core Web Vitals problems.
 
 = What DebugHawk Monitors =
 
 **Frontend Performance Metrics:**
 
 * **Core Web Vitals** - LCP (Largest Contentful Paint), INP (Interaction to Next Paint), CLS (Cumulative Layout Shift), TTFB (Time to First Byte), FCP (First Contentful Paint)
-* **Network Performance** - DNS lookup time, connection time, SSL handshake
-* **Browser Resources** - HTTP requests, page weight, transfer sizes, resource timing
+* **Network Performance** - DNS lookup time, connection time
+* **Browser Resources** - HTTP requests, page weight, transfer sizes
 
 **Backend Performance Tracking:**
 
 * **Database Query Performance** - Slow queries, query count, total database time
-* **PHP Execution** - Execution time, memory usage, peak memory
+* **PHP Execution** - Execution time, memory usage
 * **External HTTP Requests** - API call timing, external service performance
 * **Object Cache Performance** - Hit ratio, cache effectiveness
 * **Page Cache Effectiveness** - Cache hits vs misses
@@ -44,8 +44,6 @@ Unlike generic performance tools, DebugHawk understands WordPress architecture. 
 * Which plugins are causing slow database queries
 * Which external APIs are timing out
 * Whether your caching is working effectively
-* If your database needs optimization
-* Memory usage spikes and bottlenecks
 
 Perfect for WordPress developers, agencies managing multiple sites, and site owners who need to diagnose performance issues quickly.
 
@@ -98,7 +96,9 @@ Example configuration:
 
 ```php
 define( 'DEBUGHAWK_CONFIG', [
-    'site_key' => 'your-site-key-here',
+    'enabled'  => true,
+    'endpoint' => 'https://ingest.debughawk.com/your-endpoint',
+    'secret'   => 'your-secret-key',
 ] );
 ```
 
@@ -163,13 +163,13 @@ DebugHawk automatically tracks all database queries, showing you slow queries, d
 = 1.0.0 =
 * Official stable release
 * Don't track /wp-login.php redirects to reduce noise
-* Production-ready performance monitoring
 
 = 0.8.2 =
 * Fixed PHP 8.4 deprecation warning for better compatibility
 
 = 0.8.1 =
 * Initial release on WordPress.org
+* Production-ready performance monitoring
 * Core Web Vitals monitoring
 * Database query performance tracking
 * PHP execution time and memory monitoring
