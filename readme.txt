@@ -146,14 +146,6 @@ DebugHawk collects performance metrics only: page load times, database query tim
 
 DebugHawk automatically tracks all database queries, showing you slow queries, duplicate queries, and total database time. View this data in your DebugHawk dashboard to identify optimization opportunities.
 
-== Screenshots ==
-
-1. Overview dashboard showing Core Web Vitals and backend performance metrics
-2. Database query analysis identifying slow queries and optimization opportunities
-3. External HTTP request monitoring showing API call timing
-4. Cache effectiveness tracking for both object cache and page cache
-5. Real-time performance monitoring across all site visitors
-
 == Changelog ==
 
 = 1.1.1 =
