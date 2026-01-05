@@ -93,7 +93,7 @@ class Plugin {
 	}
 
 	public function deactivate(): void {
-		// Clear dismissed notice state for all users
+		// Clear dismissed notice state for all users (object_id is ignored when delete_all is true)
 		delete_metadata( 'user', 0, 'debughawk_notice_dismissed', '', true );
 
 		$db_file = WP_CONTENT_DIR . '/db.php';
