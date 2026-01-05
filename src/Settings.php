@@ -58,8 +58,8 @@ class Settings {
 		$this->add_settings_field( 'endpoint', __( 'Endpoint URL', 'debughawk' ), 'render_text_field' );
 		$this->add_settings_field( 'secret', __( 'Secret Key', 'debughawk' ), 'render_password_field' );
 		$this->add_settings_field( 'sample_rate', __( 'Sample Rate', 'debughawk' ), 'render_number_field' );
-		$this->add_settings_field( 'trace_admin_pages', __( 'Trace Admin Pages', 'debughawk' ), 'render_checkbox_field' );
-		$this->add_settings_field( 'trace_redirects', __( 'Trace Redirects', 'debughawk' ), 'render_checkbox_field' );
+		$this->add_settings_field( 'trace_admin_pages', __( 'Monitor Admin Pages', 'debughawk' ), 'render_checkbox_field' );
+		$this->add_settings_field( 'trace_redirects', __( 'Monitor Redirects', 'debughawk' ), 'render_checkbox_field' );
 		$this->add_settings_field( 'slow_queries_threshold', __( 'Slow Queries Threshold (ms)', 'debughawk' ), 'render_number_field' );
 	}
 
@@ -84,7 +84,7 @@ class Settings {
 
 			<?php if ( $this->has_constant ): ?>
                 <div class="notice notice-info">
-                    <p><?php esc_html_e( 'DebugHawk is configured via the DEBUGHAWK_CONFIG constant in wp-config.php. Settings on this page are disabled.', 'debughawk' ); ?></p>
+                    <p><?php esc_html_e( 'Your settings are managed in wp-config.php via the DEBUGHAWK_CONFIG constant.', 'debughawk' ); ?></p>
                 </div>
 			<?php endif; ?>
 
@@ -104,7 +104,7 @@ class Settings {
 
 	public function render_section_description(): void {
 		?>
-        <p><?php esc_html_e( 'Configure DebugHawk to monitor your WordPress site performance.', 'debughawk' ); ?></p>
+        <p><?php esc_html_e( 'Enter your endpoint and secret key from your DebugHawk dashboard to start monitoring your site\'s performance.', 'debughawk' ); ?></p>
 		<?php
 	}
 
@@ -184,12 +184,12 @@ class Settings {
 	private function render_field_description( string $field ): void {
 		$descriptions = [
 			'enabled'                => __( 'Enable or disable DebugHawk monitoring.', 'debughawk' ),
-			'endpoint'               => __( 'The URL endpoint where performance data will be sent.', 'debughawk' ),
-			'secret'                 => __( 'Secret key for encrypting data before transmission.', 'debughawk' ),
+			'endpoint'               => __( 'Find this in your DebugHawk dashboard under Site Settings.', 'debughawk' ),
+			'secret'                 => __( 'Find this in your DebugHawk dashboard under Site Settings.', 'debughawk' ),
 			'sample_rate'            => __( 'Percentage of requests to monitor (0-1). For example, 0.1 means 10% of requests.', 'debughawk' ),
-			'trace_admin_pages'      => __( 'Include WordPress admin pages in monitoring.', 'debughawk' ),
-			'trace_redirects'        => __( 'Monitor redirect responses.', 'debughawk' ),
-			'slow_queries_threshold' => __( 'Database queries taking longer than this (in milliseconds) are considered slow.', 'debughawk' ),
+			'trace_admin_pages'      => __( 'Also monitor WordPress admin pages.', 'debughawk' ),
+			'trace_redirects'        => __( 'Also monitor redirect responses.', 'debughawk' ),
+			'slow_queries_threshold' => __( 'Queries taking longer than this will be flagged as slow.', 'debughawk' ),
 		];
 
 		if ( isset( $descriptions[ $field ] ) ) {
@@ -266,7 +266,7 @@ class Settings {
 				<?php
 				printf(
 					/* translators: %s: URL to settings page */
-					esc_html__( 'Welcome to DebugHawk! %s to start seeing performance insights from your WordPress site.', 'debughawk' ),
+					esc_html__( 'Welcome to DebugHawk! %s to start monitoring your site\'s performance.', 'debughawk' ),
 					'<a href="' . esc_url( admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) ) . '">' . esc_html__( 'Configure your settings', 'debughawk' ) . '</a>'
 				);
 				?>
