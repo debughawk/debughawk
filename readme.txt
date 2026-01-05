@@ -2,7 +2,7 @@
 Contributors: A5hleyRich
 Tags: performance, monitoring, debug, slow, speed, database, queries, core web vitals, optimization, profiling, cache, site health
 Tested up to: 6.9
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 Requires at least: 6.3
 Requires PHP: 7.4
 License: GPLv3
@@ -148,6 +148,11 @@ DebugHawk automatically tracks all database queries, showing you slow queries, d
 
 == Changelog ==
 
+= 1.2.0 =
+* Added welcome notice for new installations guiding users to configuration
+* Automatically redirect to settings page on first activation
+* Added Author URI to plugin header for better discoverability
+
 = 1.1.1 =
 * Ensure db.php drop-in is updated and removed on plugin deactivation
 
@@ -177,6 +182,9 @@ DebugHawk automatically tracks all database queries, showing you slow queries, d
 * Object cache and page cache effectiveness
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+Improved onboarding experience with welcome notice and automatic redirect to settings for new installations.
 
 = 1.1.1 =
 Important update: Ensures db.php drop-in is properly managed during plugin deactivation.
