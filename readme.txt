@@ -2,7 +2,7 @@
 Contributors: A5hleyRich
 Tags: performance, monitoring, debug, slow, speed, database, queries, core web vitals, optimization, profiling, cache, site health
 Tested up to: 6.9
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 Requires at least: 6.3
 Requires PHP: 7.4
 License: GPLv3
@@ -147,6 +147,10 @@ DebugHawk collects performance metrics only: page load times, database query tim
 DebugHawk automatically tracks all database queries, showing you slow queries, duplicate queries, and total database time. View this data in your DebugHawk dashboard to identify optimization opportunities.
 
 == Changelog ==
+
+= 1.2.0 =
+* Added welcome notice for new installations guiding users to configuration
+* Automatically redirect to settings page on first activation
 
 = 1.1.1 =
 * Ensure db.php drop-in is updated and removed on plugin deactivation

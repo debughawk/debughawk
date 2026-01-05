@@ -85,9 +85,17 @@ class Plugin {
 		if ( is_writable( WP_CONTENT_DIR ) && ! file_exists( $db_file ) ) {
 			copy( plugin_dir_path( $this->config->path ) . 'wp-content/db.php', $db_file );
 		}
+
+		// Redirect to settings page on activation if not configured
+		if ( ! $this->config->configured() ) {
+			set_transient( 'debughawk_activation_redirect', true, 30 );
+		}
 	}
 
 	public function deactivate(): void {
+		// Clear dismissed notice state for all users (object_id is ignored when delete_all is true)
+		delete_metadata( 'user', 0, 'debughawk_notice_dismissed', '', true );
+
 		$db_file = WP_CONTENT_DIR . '/db.php';
 
 		if ( ! file_exists( $db_file ) ) {
