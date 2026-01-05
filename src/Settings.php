@@ -256,6 +256,10 @@ class Settings {
 	}
 
 	public function admin_notice_unconfigured(): void {
+		// Don't show the notice on the settings page itself
+		if ( isset( $_GET['page'] ) && $_GET['page'] === self::PAGE_SLUG ) {
+			return;
+		}
 		?>
 		<div class="notice notice-info">
 			<p>
