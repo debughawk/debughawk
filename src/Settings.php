@@ -26,9 +26,11 @@ class Settings {
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_action( 'admin_init', [ $this, 'maybe_redirect_after_activation' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
+		add_action( 'wp_ajax_debughawk_dismiss_notice', [ $this, 'ajax_dismiss_notice' ] );
 
 		if ( ! $this->config->configured() ) {
 			add_action( 'admin_notices', [ $this, 'admin_notice_unconfigured' ] );
+			add_action( 'admin_footer', [ $this, 'dismiss_notice_script' ] );
 		}
 	}
 
@@ -299,8 +301,13 @@ class Settings {
 		if ( isset( $_GET['page'] ) && $_GET['page'] === self::PAGE_SLUG ) {
 			return;
 		}
+
+		// Don't show if user has dismissed it
+		if ( get_user_meta( get_current_user_id(), 'debughawk_notice_dismissed', true ) ) {
+			return;
+		}
 		?>
-		<div class="notice notice-info">
+		<div class="notice notice-info is-dismissible" data-debughawk-notice="welcome">
 			<p>
 				<?php
 				printf(
@@ -312,6 +319,33 @@ class Settings {
 				?>
 			</p>
 		</div>
+		<?php
+	}
+
+	public function ajax_dismiss_notice(): void {
+		check_ajax_referer( 'debughawk_dismiss_notice', 'nonce' );
+		update_user_meta( get_current_user_id(), 'debughawk_notice_dismissed', true );
+		wp_send_json_success();
+	}
+
+	public function dismiss_notice_script(): void {
+		?>
+		<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			var notice = document.querySelector('[data-debughawk-notice="welcome"]');
+			if (!notice) return;
+
+			notice.addEventListener('click', function(e) {
+				if (!e.target.classList.contains('notice-dismiss')) return;
+
+				fetch(ajaxurl, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+					body: 'action=debughawk_dismiss_notice&nonce=<?php echo esc_js( wp_create_nonce( 'debughawk_dismiss_notice' ) ); ?>'
+				});
+			});
+		});
+		</script>
 		<?php
 	}
 
