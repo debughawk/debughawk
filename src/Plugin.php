@@ -93,6 +93,9 @@ class Plugin {
 	}
 
 	public function deactivate(): void {
+		// Clear dismissed notice state for all users
+		delete_metadata( 'user', 0, 'debughawk_notice_dismissed', '', true );
+
 		$db_file = WP_CONTENT_DIR . '/db.php';
 
 		if ( ! file_exists( $db_file ) ) {
