@@ -224,9 +224,9 @@ class Settings {
 		$descriptions = [
 			'enabled'                => __( 'Enable or disable DebugHawk monitoring.', 'debughawk' ),
 			/* translators: %s: Link to DebugHawk dashboard */
-			'endpoint'               => sprintf( __( 'Find this in your %s under Site Settings.', 'debughawk' ), $dashboard_link ),
+			'endpoint'               => sprintf( __( 'Find this in your %s.', 'debughawk' ), $dashboard_link ),
 			/* translators: %s: Link to DebugHawk dashboard */
-			'secret'                 => sprintf( __( 'Find this in your %s under Site Settings.', 'debughawk' ), $dashboard_link ),
+			'secret'                 => sprintf( __( 'Find this in your %s.', 'debughawk' ), $dashboard_link ),
 			'sample_rate'            => __( 'Percentage of requests to monitor (0-1). For example, 0.1 means 10% of requests.', 'debughawk' ),
 			'trace_admin_pages'      => __( 'Also monitor WordPress admin pages.', 'debughawk' ),
 			'trace_redirects'        => __( 'Also monitor redirect responses.', 'debughawk' ),
