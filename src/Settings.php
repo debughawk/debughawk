@@ -20,7 +20,12 @@ class Settings {
 	public function init(): void {
 		add_action( 'admin_menu', [ $this, 'add_menu_page' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
+		add_action( 'admin_init', [ $this, 'maybe_redirect_after_activation' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
+
+		if ( ! $this->config->configured() ) {
+			add_action( 'admin_notices', [ $this, 'admin_notice_unconfigured' ] );
+		}
 	}
 
 	public function add_menu_page(): void {
@@ -232,6 +237,38 @@ class Settings {
 				cursor: not-allowed;
 			}
 		' );
+	}
+
+	public function maybe_redirect_after_activation(): void {
+		if ( ! get_transient( 'debughawk_activation_redirect' ) ) {
+			return;
+		}
+
+		delete_transient( 'debughawk_activation_redirect' );
+
+		// Don't redirect if activating multiple plugins at once
+		if ( isset( $_GET['activate-multi'] ) ) {
+			return;
+		}
+
+		wp_safe_redirect( admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) );
+		exit;
+	}
+
+	public function admin_notice_unconfigured(): void {
+		?>
+		<div class="notice notice-info">
+			<p>
+				<?php
+				printf(
+					/* translators: %s: URL to settings page */
+					esc_html__( 'Welcome to DebugHawk! %s to start seeing performance insights from your WordPress site.', 'debughawk' ),
+					'<a href="' . esc_url( admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) ) . '">' . esc_html__( 'Configure your settings', 'debughawk' ) . '</a>'
+				);
+				?>
+			</p>
+		</div>
+		<?php
 	}
 
 	public static function get_settings(): array {

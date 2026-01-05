@@ -85,6 +85,11 @@ class Plugin {
 		if ( is_writable( WP_CONTENT_DIR ) && ! file_exists( $db_file ) ) {
 			copy( plugin_dir_path( $this->config->path ) . 'wp-content/db.php', $db_file );
 		}
+
+		// Redirect to settings page on activation if not configured
+		if ( ! $this->config->configured() ) {
+			set_transient( 'debughawk_activation_redirect', true, 30 );
+		}
 	}
 
 	public function deactivate(): void {
