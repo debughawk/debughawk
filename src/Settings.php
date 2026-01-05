@@ -323,6 +323,10 @@ class Settings {
 	}
 
 	public function ajax_dismiss_notice(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Unauthorized', 403 );
+		}
+
 		check_ajax_referer( 'debughawk_dismiss_notice', 'nonce' );
 		update_user_meta( get_current_user_id(), 'debughawk_notice_dismissed', true );
 		wp_send_json_success();
