@@ -58,3 +58,21 @@ if ( ! function_exists( 'wp_print_inline_script_tag' ) ) {
 		echo '<script>' . $data . '</script>';
 	}
 }
+
+if ( ! function_exists( 'is_ssl' ) ) {
+	function is_ssl() {
+		return true;
+	}
+}
+
+if ( ! function_exists( 'sanitize_text_field' ) ) {
+	function sanitize_text_field( $text ) {
+		return (string) $text;
+	}
+}
+
+if ( ! function_exists( 'esc_url_raw' ) ) {
+	function esc_url_raw( $url ) {
+		return (string) $url;
+	}
+}
