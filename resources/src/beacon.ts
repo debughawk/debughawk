@@ -53,20 +53,19 @@ class DebugHawk {
 
             this.beaconSent = true;
         } else {
+            // Marked as sent straight away, so another visibilitychange before
+            // the request finishes doesn't send it twice.
+            this.beaconSent = true;
+
+            // No JSON Content-Type: a plain-text body, like sendBeacon's, keeps
+            // this a simple request with no CORS preflight while the page closes.
             fetch(this.config.endpoint, {
                 method: 'POST',
                 body: payloadJson,
                 keepalive: true,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(() => {
-                    this.beaconSent = true;
-                })
-                .catch(error => {
-                    console.warn('DebugHawk: Fetch error', error);
-                });
+            }).catch(error => {
+                console.warn('DebugHawk: Fetch error', error);
+            });
         }
     }
 
