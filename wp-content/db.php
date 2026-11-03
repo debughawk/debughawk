@@ -4,7 +4,7 @@
  * Plugin URI: https://debughawk.com/
  * Description: Database drop-in for DebugHawk to capture database metrics and slow queries.
  * Author: DebugHawk
- * Version: 1.1.1
+ * Version: 1.2.0
  * Requires PHP: 7.4
  * Requires WP: 6.3
  * License: GPLv3
@@ -42,22 +42,28 @@ if ( is_admin() ) {
 }
 
 class DebugHawkDB extends wpdb {
+	/**
+	 * Time spent in queries run from inside the current query, such as the
+	 * charset lookup wpdb makes for queries containing non-ASCII text.
+	 */
+	protected float $debughawk_nested_time = 0.0;
 
 	public function query( $query ) {
-		if ( ! defined( 'SAVEQUERIES' ) || ! SAVEQUERIES ) {
-			$this->timer_start();
-		}
+		// Time each call locally: wpdb's shared timer is reset by nested queries.
+		$outer_nested_time           = $this->debughawk_nested_time;
+		$this->debughawk_nested_time = 0.0;
 
-		$result = parent::query( $query );
+		$start   = microtime( true );
+		$result  = parent::query( $query );
+		$elapsed = microtime( true ) - $start;
+
+		// Each query's time excludes its nested queries, which are logged
+		// separately, so the times add up to the real total.
+		$query_time                  = $elapsed - $this->debughawk_nested_time;
+		$this->debughawk_nested_time = $outer_nested_time + $elapsed;
 
 		if ( ! defined( 'SAVEQUERIES' ) || ! SAVEQUERIES ) {
-			$this->log_query(
-				$query,
-				$this->timer_stop(),
-				'',
-				$this->time_start,
-				[],
-			);
+			$this->log_query( $query, $query_time, '', $start, [] );
 		}
 
 		return $result;
