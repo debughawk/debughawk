@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run build` - Build production assets
 - `npm run watch` - Watch and rebuild assets during development
 - `npm run typecheck` - Run TypeScript type checking
+- `composer test` - Run PHPUnit tests (requires `composer install` with dev dependencies)
 - `./build.sh` - Create distributable zip file (removes dev dependencies)
 
 ## Architecture Overview
@@ -54,4 +55,6 @@ define('DEBUGHAWK_CONFIG', [
 
 ### Database Monitoring
 
-The plugin creates a symlink from its `wp-content/db.php` to WordPress's `wp-content/db.php` on activation. This drop-in replacement for wpdb captures query performance data.
+The plugin copies its `wp-content/db.php` to WordPress's `wp-content/db.php` on activation. This drop-in replacement for wpdb times every query and keeps running totals (count, time, per-type), passing only slow queries to `DatabaseCollector::track_slow_query()`, which it calls directly (not through a hook) so backtraces stay accurate. It doesn't store queries, so memory stays flat.
+
+The installed copy only updates on an admin page load when its `Version` header is higher than the installed one, so bump it whenever `db.php` changes. Until then, and when another drop-in is in place (such as Query Monitor's) or `SAVEQUERIES` is on without ours, `DatabaseCollector` falls back to the `log_query_custom_data` filter and `$wpdb->queries`.

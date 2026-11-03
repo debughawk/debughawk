@@ -21,7 +21,7 @@ class Config {
 		'trace_admin_pages'      => true,
 		'trace_redirects'        => true,
 		'slow_queries_threshold' => 50, // 50 ms
-		'slow_queries_limit'     => 3,
+		'slow_queries_limit'     => 10,
 	];
 
 	private array $config;
