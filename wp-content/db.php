@@ -43,6 +43,23 @@ if ( is_admin() ) {
 
 class DebugHawkDB extends wpdb {
 	/**
+	 * Running totals for every query, read by DebugHawk's database collector.
+	 * Kept as totals rather than in $this->queries, so memory stays flat
+	 * however many queries a request runs.
+	 */
+	public array $debughawk_stats = [
+		'count' => 0,
+		'time'  => 0.0,
+		'types' => [],
+	];
+
+	/**
+	 * Queries slower than this many seconds are passed to the
+	 * 'debughawk_slow_query' action. Set by the plugin once it loads.
+	 */
+	public ?float $debughawk_slow_threshold = null;
+
+	/**
 	 * Time spent in queries run from inside the current query, such as the
 	 * charset lookup wpdb makes for queries containing non-ASCII text.
 	 */
@@ -57,13 +74,27 @@ class DebugHawkDB extends wpdb {
 		$result  = parent::query( $query );
 		$elapsed = microtime( true ) - $start;
 
-		// Each query's time excludes its nested queries, which are logged
+		// Each query's time excludes its nested queries, which are counted
 		// separately, so the times add up to the real total.
 		$query_time                  = $elapsed - $this->debughawk_nested_time;
 		$this->debughawk_nested_time = $outer_nested_time + $elapsed;
 
-		if ( ! defined( 'SAVEQUERIES' ) || ! SAVEQUERIES ) {
-			$this->log_query( $query, $query_time, '', $start, [] );
+		$type = preg_match( '/^\s*([A-Za-z]+)\b/', $query, $matches ) ? strtoupper( $matches[1] ) : 'OTHER';
+
+		if ( ! isset( $this->debughawk_stats['types'][ $type ] ) ) {
+			$this->debughawk_stats['types'][ $type ] = [
+				'count' => 0,
+				'time'  => 0.0,
+			];
+		}
+
+		$this->debughawk_stats['count'] ++;
+		$this->debughawk_stats['time']                    += $query_time;
+		$this->debughawk_stats['types'][ $type ]['count'] ++;
+		$this->debughawk_stats['types'][ $type ]['time']  += $query_time;
+
+		if ( $this->debughawk_slow_threshold !== null && $query_time > $this->debughawk_slow_threshold ) {
+			do_action( 'debughawk_slow_query', $query, $query_time, $start );
 		}
 
 		return $result;

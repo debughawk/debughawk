@@ -23,6 +23,7 @@ class Backtrace {
 
 	protected array $ignored_functions = [
 		'apply_filters',
+		'do_action',
 		'download_url',
 		'include',
 		'include_once',

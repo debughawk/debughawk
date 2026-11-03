@@ -19,14 +19,35 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 
 	protected ?array $query_types = null;
 
+	/** Whether the DebugHawk drop-in is keeping running totals of every query. */
+	protected bool $uses_dropin_stats = false;
+
 	public function init(): void {
-		add_filter( 'log_query_custom_data', [ $this, 'track_slow_queries' ], 10, 5 );
+		global $wpdb;
+
+		if ( isset( $wpdb ) && property_exists( $wpdb, 'debughawk_stats' ) ) {
+			// The drop-in counts every query itself and only calls back for slow ones.
+			$this->uses_dropin_stats        = true;
+			$wpdb->debughawk_slow_threshold = (float) $this->config->slow_queries_threshold / 1000;
+
+			add_action( 'debughawk_slow_query', [ $this, 'track_slow_query' ], 10, 3 );
+
+			return;
+		}
+
+		// Older DebugHawk drop-ins, Query Monitor's drop-in and SAVEQUERIES store
+		// every query in $wpdb->queries and pass each one through this filter.
+		add_filter( 'log_query_custom_data', [ $this, 'track_logged_query' ], 10, 5 );
 	}
 
 	public function gather(): array {
 		global $wpdb;
 
-		$this->parse_queries();
+		if ( $this->uses_dropin_stats ) {
+			$this->read_dropin_stats();
+		} else {
+			$this->parse_queries();
+		}
 
 		$slow_queries = null;
 
@@ -53,30 +74,44 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 		];
 	}
 
-	public function track_slow_queries( $query_data, $query, $query_time, $query_callstack, $query_start ): array {
+	/**
+	 * Called by the drop-in for queries over the slow threshold.
+	 */
+	public function track_slow_query( string $query, float $query_time, float $query_start ): void {
+		$this->add_slow_query( $query, Util::seconds_to_milliseconds( $query_time ), $query_start );
+	}
+
+	/**
+	 * Called for every query when queries are stored in $wpdb->queries.
+	 */
+	public function track_logged_query( $query_data, $query, $query_time, $query_callstack, $query_start ) {
 		$query_time = Util::seconds_to_milliseconds( $query_time );
 
 		if ( $query_time > $this->config->slow_queries_threshold ) {
-			$query = trim( $query );
-
-			if ( is_null( $this->slow_queries ) ) {
-				$this->slow_queries = [];
-			}
-
-			$backtrace  = new Backtrace();
-			$query_type = $this->determine_query_type( $query );
-
-			$this->slow_queries[] = [
-				// Raw SQL, normalized in gather() before anything is sent.
-				'sql'         => $query,
-				'start_time'  => $query_start,
-				'duration_ms' => $query_time,
-				'type'        => $query_type,
-				'backtrace'   => $backtrace->parse(),
-			];
+			$this->add_slow_query( $query, $query_time, $query_start );
 		}
 
 		return $query_data;
+	}
+
+	protected function add_slow_query( string $query, float $query_time, $query_start ): void {
+		$query = trim( $query );
+
+		if ( is_null( $this->slow_queries ) ) {
+			$this->slow_queries = [];
+		}
+
+		$backtrace  = new Backtrace();
+		$query_type = $this->determine_query_type( $query );
+
+		$this->slow_queries[] = [
+			// Raw SQL, normalized in gather() before anything is sent.
+			'sql'         => $query,
+			'start_time'  => $query_start,
+			'duration_ms' => $query_time,
+			'type'        => $query_type,
+			'backtrace'   => $backtrace->parse(),
+		];
 	}
 
 	/**
@@ -91,6 +126,24 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 		$slow_query['sql_hash'] = md5( $sql );
 
 		return $slow_query;
+	}
+
+	protected function read_dropin_stats(): void {
+		global $wpdb;
+
+		$stats = $wpdb->debughawk_stats;
+
+		if ( $stats['count'] === 0 ) {
+			return;
+		}
+
+		$this->execution_time = Util::seconds_to_milliseconds( $stats['time'] );
+		$this->query_types    = array_map( static function ( array $type ): array {
+			return [
+				'count' => $type['count'],
+				'time'  => Util::seconds_to_milliseconds( $type['time'] ),
+			];
+		}, $stats['types'] );
 	}
 
 	protected function parse_queries(): void {
