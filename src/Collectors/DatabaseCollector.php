@@ -15,7 +15,14 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 
 	protected ?float $execution_time = null;
 
+	/** The slowest queries, up to slow_queries_limit of them. */
 	protected ?array $slow_queries = null;
+
+	/** How many slow queries ran, including ones not kept. */
+	protected ?int $slow_query_count = null;
+
+	/** The fastest kept query's duration, once the list is full. */
+	protected ?float $fastest_kept_time = null;
 
 	protected ?array $query_types = null;
 
@@ -52,23 +59,19 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 		$slow_queries = null;
 
 		if ( is_array( $this->slow_queries ) ) {
-			usort( $this->slow_queries, static function ( $a, $b ) {
+			$slow_queries = $this->slow_queries;
+
+			usort( $slow_queries, static function ( $a, $b ) {
 				return $b['duration_ms'] <=> $a['duration_ms'];
 			} );
 
-			// Only normalize the queries that are sent.
-			$slow_queries = array_map(
-				[ $this, 'normalize_slow_query' ],
-				array_slice( $this->slow_queries, 0, $this->config->slow_queries_limit )
-			);
+			$slow_queries = array_map( [ $this, 'normalize_slow_query' ], $slow_queries );
 		}
 
 		return [
 			'duration_ms'      => $this->execution_time,
 			'query_count'      => $wpdb->num_queries ?? null,
-			'slow_query_count' => is_array( $this->slow_queries )
-				? count( $this->slow_queries )
-				: null,
+			'slow_query_count' => $this->slow_query_count,
 			'slow_queries'     => $slow_queries,
 			'query_types'      => $this->query_types,
 		];
@@ -94,13 +97,26 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 		return $query_data;
 	}
 
+	/**
+	 * Keeps only the slowest queries, so memory stays flat and queries that
+	 * won't be sent don't pay for a backtrace.
+	 */
 	protected function add_slow_query( string $query, float $query_time, $query_start ): void {
-		$query = trim( $query );
+		$limit = max( 0, (int) $this->config->slow_queries_limit );
+
+		$this->slow_query_count = ( $this->slow_query_count ?? 0 ) + 1;
 
 		if ( is_null( $this->slow_queries ) ) {
 			$this->slow_queries = [];
 		}
 
+		// Once the list is full, only a slower query can get in. On a tie, the
+		// earlier query stays, as it did when the whole list was sorted.
+		if ( count( $this->slow_queries ) >= $limit && ( $limit === 0 || $query_time <= $this->fastest_kept_time ) ) {
+			return;
+		}
+
+		$query      = trim( $query );
 		$backtrace  = new Backtrace();
 		$query_type = $this->determine_query_type( $query );
 
@@ -112,6 +128,31 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 			'type'        => $query_type,
 			'backtrace'   => $backtrace->parse(),
 		];
+
+		if ( count( $this->slow_queries ) > $limit ) {
+			$this->drop_fastest_slow_query();
+		}
+
+		if ( count( $this->slow_queries ) === $limit ) {
+			$this->fastest_kept_time = min( array_column( $this->slow_queries, 'duration_ms' ) );
+		}
+	}
+
+	/**
+	 * On a tie, drops the most recent query, which a stable sort puts last.
+	 */
+	protected function drop_fastest_slow_query(): void {
+		$fastest = null;
+
+		foreach ( $this->slow_queries as $index => $slow_query ) {
+			if ( $fastest === null || $slow_query['duration_ms'] <= $this->slow_queries[ $fastest ]['duration_ms'] ) {
+				$fastest = $index;
+			}
+		}
+
+		unset( $this->slow_queries[ $fastest ] );
+
+		$this->slow_queries = array_values( $this->slow_queries );
 	}
 
 	/**
