@@ -19,7 +19,8 @@ class RequestCollector extends Collector {
 			'method'       => $method,
 			'status'       => http_response_code(),
 			'identifier'   => uniqid(),
-			'timestamp_ms' => date_create()->format( 'Uv' ),
+			// A number, like the browser's timestamp_ms, not a string.
+			'timestamp_ms' => (int) floor( microtime( true ) * 1000 ),
 		] );
 	}
 }

@@ -9,7 +9,57 @@ use PHPUnit\Framework\TestCase;
 
 class BeaconDispatcherTest extends TestCase {
 	protected function tearDown(): void {
-		unset( $GLOBALS['test_is_admin'], $GLOBALS['test_customize_preview'], $GLOBALS['pagenow'] );
+		unset( $GLOBALS['test_is_admin'], $GLOBALS['test_customize_preview'], $GLOBALS['pagenow'], $GLOBALS['test_enqueued_scripts'] );
+	}
+
+	public function test_excludes_iframe_screens(): void {
+		$dispatcher = new class( TestConfig::make(), new CollectorManager() ) extends BeaconDispatcher {
+			public function excluded(): bool {
+				return $this->is_excluded_screen();
+			}
+
+			protected function is_iframe_request(): bool {
+				return true;
+			}
+		};
+
+		$this->assertTrue( $dispatcher->excluded() );
+	}
+
+	public function test_prints_nothing_when_the_beacon_script_is_not_enqueued(): void {
+		$GLOBALS['test_enqueued_scripts'] = [];
+
+		$this->assertSame( '', $this->output() );
+	}
+
+	public function test_prints_the_payload_when_the_beacon_script_is_enqueued(): void {
+		$GLOBALS['test_enqueued_scripts'] = [ 'debughawk-beacon' ];
+
+		$this->assertStringContainsString( "<script>window.DebugHawk = '", $this->output() );
+	}
+
+	public function test_prints_nothing_when_the_payload_could_not_be_prepared(): void {
+		$GLOBALS['test_enqueued_scripts'] = [ 'debughawk-beacon' ];
+
+		$dispatcher = new class( TestConfig::make(), new CollectorManager() ) extends BeaconDispatcher {
+			protected function gather_and_encrypt(): string {
+				return '';
+			}
+		};
+
+		ob_start();
+		$dispatcher->output_beacon_metrics();
+
+		$this->assertSame( '', ob_get_clean() );
+	}
+
+	private function output( array $config = [ 'secret' => '0123456789abcdef' ] ): string {
+		$dispatcher = new BeaconDispatcher( TestConfig::make( $config ), new CollectorManager() );
+
+		ob_start();
+		$dispatcher->output_beacon_metrics();
+
+		return (string) ob_get_clean();
 	}
 
 	/**
