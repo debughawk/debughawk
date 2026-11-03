@@ -196,7 +196,7 @@ class DebugHawk {
                 metrics.by_domain[domain].blocking++;
             }
 
-            if (!request.url.startsWith(this.config.urls.home)) {
+            if (!this.isWithin(request.url, this.config.urls.home)) {
                 return;
             }
 
@@ -243,27 +243,38 @@ class DebugHawk {
     }
 
     private getComponentFromNetworkRequest(networkRequest: NetworkRequest): string {
-        if (networkRequest.url.startsWith(this.config.urls.plugin)) {
+        if (this.isWithin(networkRequest.url, this.config.urls.plugin)) {
             const pluginName = networkRequest.url.slice(this.config.urls.plugin.length).split('/')[0];
 
             return `plugin:${pluginName}`;
         }
 
-        if (networkRequest.url.startsWith(this.config.urls.theme)) {
+        if (this.isWithin(networkRequest.url, this.config.urls.theme)) {
             const themeName = networkRequest.url.slice(this.config.urls.theme.length).split('/')[0];
 
             return `theme:${themeName}`;
         }
 
-        if (networkRequest.url.startsWith(this.config.urls.admin) || networkRequest.url.startsWith(this.config.urls.includes)) {
+        if (this.isWithin(networkRequest.url, this.config.urls.admin) || this.isWithin(networkRequest.url, this.config.urls.includes)) {
             return 'core';
         }
 
-        if (networkRequest.url.startsWith(this.config.urls.uploads)) {
+        if (this.isWithin(networkRequest.url, this.config.urls.uploads)) {
             return 'upload';
         }
 
         return 'other';
+    }
+
+    /**
+     * Whether a URL is a base URL or inside it. The base is compared as a
+     * directory, so https://example.com doesn't match
+     * https://example.com.evil.com, and .../uploads doesn't match .../uploads-old.
+     */
+    private isWithin(url: string, base: string): boolean {
+        const directory = base.endsWith('/') ? base : base + '/';
+
+        return url === base || url.startsWith(directory);
     }
 
     private getDomainFromUrl(url: string): string {
