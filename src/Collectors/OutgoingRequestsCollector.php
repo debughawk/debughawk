@@ -44,7 +44,7 @@ class OutgoingRequestsCollector extends Collector implements NeedsInitiatingInte
 		$backtrace = new Backtrace();
 
 		$this->requests[ $request_id ] = [
-			'url'         => $url,
+			'url'         => Util::redact_url( $url ),
 			'blocking'    => $args['blocking'],
 			'start_time'  => microtime( true ),
 			'http_method' => $args['method'] ?? 'GET',

@@ -28,6 +28,43 @@ abstract class Util {
 	}
 
 	/**
+	 * Removes values that could be secret or personal from a URL before it's
+	 * sent: query values (API keys, password reset keys, order keys, search
+	 * terms, emails) become ?, credentials are removed and the fragment is
+	 * dropped. Query keys are kept, so the URL is still recognisable.
+	 *
+	 * For example, https://user:pass@api.example.com/v1/items?key=abc&page=2#top
+	 * becomes https://api.example.com/v1/items?key=?&page=?
+	 */
+	public static function redact_url( string $url ): string {
+		$hash = strpos( $url, '#' );
+
+		if ( $hash !== false ) {
+			$url = substr( $url, 0, $hash );
+		}
+
+		$url = (string) preg_replace( '#^([a-z][a-z0-9+.-]*://)[^/?@]*@#i', '$1', $url );
+
+		$question = strpos( $url, '?' );
+
+		if ( $question === false ) {
+			return $url;
+		}
+
+		$parameters = explode( '&', substr( $url, $question + 1 ) );
+
+		foreach ( $parameters as $index => $parameter ) {
+			$equals = strpos( $parameter, '=' );
+
+			if ( $equals !== false ) {
+				$parameters[ $index ] = substr( $parameter, 0, $equals ) . '=?';
+			}
+		}
+
+		return substr( $url, 0, $question + 1 ) . implode( '&', $parameters );
+	}
+
+	/**
 	 * Logs an error when WP_DEBUG is on, so failures are visible while
 	 * debugging without filling production logs.
 	 */
