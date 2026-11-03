@@ -65,7 +65,6 @@ class Settings {
 		$this->add_settings_field( 'secret', __( 'Secret Key', 'debughawk' ), 'render_password_field' );
 		$this->add_settings_field( 'sample_rate', __( 'Sample Rate', 'debughawk' ), 'render_number_field' );
 		$this->add_settings_field( 'trace_admin_pages', __( 'Monitor Admin Pages', 'debughawk' ), 'render_checkbox_field' );
-		$this->add_settings_field( 'trace_redirects', __( 'Monitor Redirects', 'debughawk' ), 'render_checkbox_field' );
 		$this->add_settings_field( 'slow_queries_threshold', __( 'Slow Queries Threshold (ms)', 'debughawk' ), 'render_number_field' );
 	}
 
@@ -229,7 +228,6 @@ class Settings {
 			'secret'                 => sprintf( __( 'Find this in your %s.', 'debughawk' ), $dashboard_link ),
 			'sample_rate'            => __( 'Percentage of requests to monitor (0-1). For example, 0.1 means 10% of requests.', 'debughawk' ),
 			'trace_admin_pages'      => __( 'Also monitor WordPress admin pages.', 'debughawk' ),
-			'trace_redirects'        => __( 'Also monitor redirect responses.', 'debughawk' ),
 			'slow_queries_threshold' => __( 'Queries taking longer than this (in milliseconds) will be flagged as slow.', 'debughawk' ),
 		];
 
@@ -258,7 +256,6 @@ class Settings {
 		$sanitized['secret']                 = sanitize_text_field( $input['secret'] ?? '' );
 		$sanitized['sample_rate']            = min( 1, max( 0, floatval( $input['sample_rate'] ?? 1 ) ) );
 		$sanitized['trace_admin_pages']      = ! empty( $input['trace_admin_pages'] );
-		$sanitized['trace_redirects']        = ! empty( $input['trace_redirects'] );
 		$sanitized['slow_queries_threshold'] = max( 0, intval( $input['slow_queries_threshold'] ?? 50 ) );
 
 		return $sanitized;

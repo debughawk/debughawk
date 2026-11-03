@@ -10,7 +10,6 @@ use DebugHawk\Collectors\PhpCollector;
 use DebugHawk\Collectors\RequestCollector;
 use DebugHawk\Collectors\WordpressCollector;
 use DebugHawk\Dispatchers\BeaconDispatcher;
-use DebugHawk\Dispatchers\RedirectDispatcher;
 
 class Plugin {
 	public Config $config;
@@ -47,7 +46,6 @@ class Plugin {
 
 		$dispatchers
 			->add( new BeaconDispatcher( $this->config, $collectors ) )
-			->add( new RedirectDispatcher( $this->config, $collectors ) )
 			->init();
 	}
 
