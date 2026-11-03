@@ -1,14 +1,14 @@
 === DebugHawk - WordPress Performance Monitoring & Debugging ===
 Contributors: A5hleyRich
-Tags: performance, monitoring, debug, slow, speed, database, queries, core web vitals, optimization, profiling, cache, site health
-Tested up to: 6.9
-Stable tag: 1.2.0
+Tags: performance, monitoring, debug, core web vitals, profiling
+Tested up to: 7.1
+Stable tag: 1.3.0
 Requires at least: 6.3
 Requires PHP: 7.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Monitor WordPress performance, debug slow sites, track Core Web Vitals, database queries, memory usage, and cache effectiveness. Performance monitoring built specifically for WordPress.
+Performance monitoring built specifically for WordPress. Track Core Web Vitals, slow database queries, external API calls and cache effectiveness.
 
 == Description ==
 
@@ -147,6 +147,22 @@ DebugHawk automatically tracks all database queries, showing you slow queries, d
 
 == Changelog ==
 
+= 1.3.0 =
+* Slow queries and external requests are now attributed to the plugin or theme that made them, including code run from hooks, symlinked plugins and themes, and custom layouts such as Bedrock
+* Slow query values, such as emails, IDs and search terms, are replaced with placeholders before they leave your site
+* Query values and credentials are removed from page and external request URLs before they're sent
+* Up to 10 slow queries are now reported per page, up from 3, and long queries are kept up to 2,048 characters
+* Failed and timed-out external requests now show how long they held up the page, along with their error message
+* Lower memory use and overhead on pages that run thousands of database queries
+* More accurate database time on pages that run nested queries
+* Response caching plugins now work as expected for external requests while DebugHawk is active
+* Admin screens shown in a popup, such as plugin details, no longer count as separate page views
+* Customizer previews and the Site Editor are now excluded correctly, including on subdirectory installs
+* An error collecting one metric no longer stops the rest of the page from loading
+* Pages with unusual characters in a URL or query are now reported instead of being skipped
+* Pages with many external requests now report the slowest 20, so the data stays within the browser's size limit
+* Removed redirect monitoring and the "Monitor Redirects" setting
+
 = 1.2.0 =
 * Added welcome notice for new installations guiding users to configuration
 * Automatically redirect to settings page on first activation
@@ -180,6 +196,9 @@ DebugHawk automatically tracks all database queries, showing you slow queries, d
 * Object cache and page cache effectiveness
 
 == Upgrade Notice ==
+
+= 1.3.0 =
+More accurate plugin and theme attribution for slow queries and external requests, and query values are no longer sent. Redirect monitoring has been removed.
 
 = 1.1.1 =
 Important update: Ensures db.php drop-in is properly managed during plugin deactivation.
