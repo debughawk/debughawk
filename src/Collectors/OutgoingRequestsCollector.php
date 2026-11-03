@@ -23,14 +23,14 @@ class OutgoingRequestsCollector extends Collector implements NeedsInitiatingInte
 	public function init(): void {
 		add_filter( 'http_request_args', [ $this, 'make_request_traceable' ], 9999, 2 );
 		add_filter( 'pre_http_request', [ $this, 'track_request_start' ], 9999, 3 );
-		add_filter( 'http_response', [ $this, 'track_request_end' ], 9999, 3 );
+		add_action( 'http_api_debug', [ $this, 'track_request_end' ], 9999, 5 );
 	}
 
 	public function gather(): array {
 		$requests = array_values( $this->requests );
 
-		// Slowest first. Requests without a duration (failed or non-blocking)
-		// go last, since how long they took isn't known.
+		// Slowest first. Non-blocking requests have no duration, since they
+		// don't hold up the page, so they go last.
 		usort( $requests, static function ( $a, $b ) {
 			return ( $b['duration_ms'] ?? -1 ) <=> ( $a['duration_ms'] ?? -1 );
 		} );
@@ -73,21 +73,33 @@ class OutgoingRequestsCollector extends Collector implements NeedsInitiatingInte
 		return $preempt;
 	}
 
-	public function track_request_end( $response, $args, $url ) {
+	/**
+	 * Runs on http_api_debug, which fires for every outcome. Failed blocking
+	 * requests, such as timeouts, hold up the page for as long as they take
+	 * but never reach the http_response filter, so they had no duration.
+	 *
+	 * Non-blocking requests return straight away without slowing the page,
+	 * so they're left without a duration.
+	 */
+	public function track_request_end( $response, $context, $class, $args, $url ): void {
 		$request_id = $args['_debughawk_request_id'] ?? null;
 
-		if ( ! $request_id || ! isset( $this->requests[ $request_id ] ) ) {
-			return $response;
+		if ( ! $request_id || ! isset( $this->requests[ $request_id ] ) || empty( $args['blocking'] ) ) {
+			return;
 		}
 
 		$duration = microtime( true ) - $this->requests[ $request_id ]['start_time'];
 
 		$this->requests[ $request_id ]['duration_ms'] = Util::seconds_to_milliseconds( $duration );
-		$this->requests[ $request_id ]['http_status'] = wp_remote_retrieve_response_code( $response );
+
+		if ( is_wp_error( $response ) ) {
+			// Such as "cURL error 28: Operation timed out after 5001 milliseconds".
+			$this->requests[ $request_id ]['error'] = Util::truncate( $response->get_error_message(), 256 );
+		} else {
+			$this->requests[ $request_id ]['http_status'] = wp_remote_retrieve_response_code( $response );
+		}
 
 		$this->drop_fastest_finished_request();
-
-		return $response;
 	}
 
 	/**
