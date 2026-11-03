@@ -167,9 +167,7 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 	protected function normalize_slow_query( array $slow_query ): array {
 		$sql = QueryNormalizer::normalize( $slow_query['sql'] );
 
-		$slow_query['sql']      = strlen( $sql ) > self::MAX_SQL_LENGTH
-			? substr( $sql, 0, self::MAX_SQL_LENGTH )
-			: $sql;
+		$slow_query['sql']      = Util::truncate( $sql, self::MAX_SQL_LENGTH );
 		$slow_query['sql_hash'] = md5( $sql );
 
 		return $slow_query;

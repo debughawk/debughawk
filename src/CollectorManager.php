@@ -23,11 +23,21 @@ class CollectorManager {
 		return $this;
 	}
 
+	/**
+	 * Runs every collector. One that fails is sent as null rather than
+	 * stopping the rest, since this runs while the page is being output.
+	 */
 	public function gather(): array {
 		$data = [];
 
 		foreach ( $this->collectors as $collector ) {
-			$data[ $collector->key ] = $collector->gather();
+			try {
+				$data[ $collector->key ] = $collector->gather();
+			} catch ( \Throwable $e ) {
+				$data[ $collector->key ] = null;
+
+				Util::log_error( sprintf( 'The %s collector failed: %s', $collector->key, $e->getMessage() ) );
+			}
 		}
 
 		return $data;

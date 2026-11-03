@@ -2,6 +2,8 @@
 
 namespace DebugHawk\Collectors;
 
+use DebugHawk\Util;
+
 class RequestCollector extends Collector {
 	public string $key = 'request';
 
@@ -13,7 +15,7 @@ class RequestCollector extends Collector {
 		$method      = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( $_SERVER['REQUEST_METHOD'] ) : '';
 
 		return array_filter( [
-			'url'          => sprintf( '%s://%s%s', $scheme, $host, $request_uri ),
+			'url'          => Util::redact_url( sprintf( '%s://%s%s', $scheme, $host, $request_uri ) ),
 			'method'       => $method,
 			'status'       => http_response_code(),
 			'identifier'   => uniqid(),

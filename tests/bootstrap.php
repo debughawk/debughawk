@@ -8,3 +8,6 @@ define( 'WPINC', 'wp-includes' );
 define( 'WP_CONTENT_DIR', '/srv/www/wp-content' );
 define( 'WP_PLUGIN_DIR', '/srv/www/wp-content/plugins' );
 define( 'WPMU_PLUGIN_DIR', '/srv/www/wp-content/mu-plugins' );
+
+require __DIR__ . '/Support/wp-functions.php';
+require __DIR__ . '/Support/hooks.php';
