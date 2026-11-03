@@ -39,3 +39,22 @@ if ( ! function_exists( 'is_wp_error' ) ) {
 		return $thing instanceof WP_Error;
 	}
 }
+
+// Set $GLOBALS['test_enqueued_scripts'] to the handles a test treats as enqueued.
+if ( ! function_exists( 'wp_script_is' ) ) {
+	function wp_script_is( $handle, $status = 'enqueued' ) {
+		return in_array( $handle, $GLOBALS['test_enqueued_scripts'] ?? [], true );
+	}
+}
+
+if ( ! function_exists( 'esc_js' ) ) {
+	function esc_js( $text ) {
+		return $text;
+	}
+}
+
+if ( ! function_exists( 'wp_print_inline_script_tag' ) ) {
+	function wp_print_inline_script_tag( $data, $attributes = [] ) {
+		echo '<script>' . $data . '</script>';
+	}
+}

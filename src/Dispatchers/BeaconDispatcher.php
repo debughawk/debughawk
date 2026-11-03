@@ -21,7 +21,10 @@ class BeaconDispatcher extends Dispatcher implements NeedsInitiatingInterface {
 	}
 
 	public function output_beacon_metrics(): void {
-		if ( $this->is_excluded_screen() ) {
+		// Without the beacon script nothing sends the payload, so don't spend
+		// time gathering it. That covers login pages when admin pages aren't
+		// traced, and embed pages, which never enqueue scripts.
+		if ( $this->is_excluded_screen() || ! wp_script_is( 'debughawk-beacon', 'enqueued' ) ) {
 			return;
 		}
 
@@ -48,9 +51,20 @@ class BeaconDispatcher extends Dispatcher implements NeedsInitiatingInterface {
 			return true;
 		}
 
+		// Admin screens shown in an iframe, such as the plugin details modal,
+		// the theme installer and the media upload screen. Each would
+		// otherwise be counted as a separate page view.
+		if ( $this->is_iframe_request() ) {
+			return true;
+		}
+
 		// The Site Editor. $pagenow works wherever WordPress is installed,
 		// unlike matching the script path against /wp-admin/site-editor.php.
 		return is_admin() && ( $GLOBALS['pagenow'] ?? '' ) === 'site-editor.php';
+	}
+
+	protected function is_iframe_request(): bool {
+		return defined( 'IFRAME_REQUEST' ) && IFRAME_REQUEST;
 	}
 
 	public function enqueue_beacon(): void {
