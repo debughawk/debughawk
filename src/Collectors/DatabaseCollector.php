@@ -29,13 +29,21 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 	/** Whether the DebugHawk drop-in is keeping running totals of every query. */
 	protected bool $uses_dropin_stats = false;
 
+	/** Read once from the config, as the fallback path checks it for every query. */
+	protected float $slow_threshold_seconds = 0.0;
+
+	protected int $slow_queries_limit = 0;
+
 	public function init(): void {
 		global $wpdb;
+
+		$this->slow_threshold_seconds = (float) $this->config->slow_queries_threshold / 1000;
+		$this->slow_queries_limit     = max( 0, (int) $this->config->slow_queries_limit );
 
 		if ( isset( $wpdb ) && property_exists( $wpdb, 'debughawk_stats' ) ) {
 			// The drop-in counts every query itself and only calls back for slow ones.
 			$this->uses_dropin_stats        = true;
-			$wpdb->debughawk_slow_threshold = (float) $this->config->slow_queries_threshold / 1000;
+			$wpdb->debughawk_slow_threshold = $this->slow_threshold_seconds;
 
 			add_action( 'debughawk_slow_query', [ $this, 'track_slow_query' ], 10, 3 );
 
@@ -88,10 +96,9 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 	 * Called for every query when queries are stored in $wpdb->queries.
 	 */
 	public function track_logged_query( $query_data, $query, $query_time, $query_callstack, $query_start ) {
-		$query_time = Util::seconds_to_milliseconds( $query_time );
-
-		if ( $query_time > $this->config->slow_queries_threshold ) {
-			$this->add_slow_query( $query, $query_time, $query_start );
+		// Compare in seconds, as the drop-in does, so fast queries skip the conversion.
+		if ( $query_time > $this->slow_threshold_seconds ) {
+			$this->add_slow_query( $query, Util::seconds_to_milliseconds( $query_time ), $query_start );
 		}
 
 		return $query_data;
@@ -102,7 +109,7 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 	 * won't be sent don't pay for a backtrace.
 	 */
 	protected function add_slow_query( string $query, float $query_time, $query_start ): void {
-		$limit = max( 0, (int) $this->config->slow_queries_limit );
+		$limit = $this->slow_queries_limit;
 
 		$this->slow_query_count = ( $this->slow_query_count ?? 0 ) + 1;
 
