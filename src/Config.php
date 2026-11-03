@@ -9,7 +9,6 @@ namespace DebugHawk;
  * @property float $sample_rate
  * @property string $secret
  * @property boolean $trace_admin_pages
- * @property boolean $trace_redirects
  * @property int $slow_queries_threshold
  * @property int $slow_queries_limit
  */
@@ -19,7 +18,6 @@ class Config {
 		'script_url'             => 'https://cdn.debughawk.com/script.js',
 		'sample_rate'            => 1,
 		'trace_admin_pages'      => true,
-		'trace_redirects'        => true,
 		'slow_queries_threshold' => 50, // 50 ms
 		'slow_queries_limit'     => 10,
 	];
@@ -57,10 +55,6 @@ class Config {
 		}
 
 		return trailingslashit( $this->endpoint ) . $dispatcher;
-	}
-
-	public function is_within_sample_range(): bool {
-		return random_int( 1, 100 ) <= ( $this->sample_rate * 100 );
 	}
 
 	public function to_array(): array {

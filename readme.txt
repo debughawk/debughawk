@@ -35,7 +35,6 @@ DebugHawk monitors both frontend and backend performance so you can see exactly 
 * **External HTTP Requests** - API call timing, external service performance
 * **Object Cache Performance** - Hit ratio, cache effectiveness
 * **Page Cache Effectiveness** - Cache hits vs misses
-* **Redirect Detection** - Unnecessary redirects slowing page loads
 
 = Debug Slow WordPress Sites =
 
