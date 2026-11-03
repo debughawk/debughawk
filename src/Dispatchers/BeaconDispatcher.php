@@ -21,6 +21,10 @@ class BeaconDispatcher extends Dispatcher implements NeedsInitiatingInterface {
 	}
 
 	public function output_beacon_metrics(): void {
+		if ( $this->is_excluded_screen() ) {
+			return;
+		}
+
 		echo '<!-- DebugHawk -->' . "\n\n";
 		wp_print_inline_script_tag( "window.DebugHawk = '" . esc_js( $this->gather_and_encrypt() ) . "';" );
 	}
@@ -30,20 +34,30 @@ class BeaconDispatcher extends Dispatcher implements NeedsInitiatingInterface {
 			return false;
 		}
 
-		// Don't dispatch during a Customizer preview request:
-		if ( function_exists( 'is_customize_preview' ) && is_customize_preview() ) {
-			return false;
-		}
-
-		// Don't dispatch inside the Site Editor:
-		if ( isset( $_SERVER['SCRIPT_NAME'] ) && $_SERVER['SCRIPT_NAME'] === '/wp-admin/site-editor.php' ) {
-			return false;
-		}
-
 		return apply_filters( 'debughawk_should_output_beacon', true );
 	}
 
+	/**
+	 * Screens that aren't real page views. Checked when the page is output,
+	 * not when the plugin loads: the Customizer isn't set up until
+	 * plugins_loaded, so checking any earlier never matched.
+	 */
+	protected function is_excluded_screen(): bool {
+		// A Customizer preview.
+		if ( function_exists( 'is_customize_preview' ) && is_customize_preview() ) {
+			return true;
+		}
+
+		// The Site Editor. $pagenow works wherever WordPress is installed,
+		// unlike matching the script path against /wp-admin/site-editor.php.
+		return is_admin() && ( $GLOBALS['pagenow'] ?? '' ) === 'site-editor.php';
+	}
+
 	public function enqueue_beacon(): void {
+		if ( $this->is_excluded_screen() ) {
+			return;
+		}
+
 		wp_enqueue_script( 'debughawk-beacon', $this->config->script_url, [], null, [
 			'strategy' => 'async',
 		] );
