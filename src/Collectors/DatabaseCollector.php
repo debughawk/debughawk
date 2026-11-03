@@ -4,10 +4,14 @@ namespace DebugHawk\Collectors;
 
 use DebugHawk\Backtrace;
 use DebugHawk\NeedsInitiatingInterface;
+use DebugHawk\QueryNormalizer;
 use DebugHawk\Util;
 
 class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 	public string $key = 'database';
+
+	/** Normalized SQL longer than this is truncated before sending. */
+	protected const MAX_SQL_LENGTH = 2048;
 
 	protected ?float $execution_time = null;
 
@@ -24,10 +28,18 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 
 		$this->parse_queries();
 
+		$slow_queries = null;
+
 		if ( is_array( $this->slow_queries ) ) {
 			usort( $this->slow_queries, static function ( $a, $b ) {
 				return $b['duration_ms'] <=> $a['duration_ms'];
 			} );
+
+			// Only normalize the queries that are sent.
+			$slow_queries = array_map(
+				[ $this, 'normalize_slow_query' ],
+				array_slice( $this->slow_queries, 0, $this->config->slow_queries_limit )
+			);
 		}
 
 		return [
@@ -36,9 +48,7 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 			'slow_query_count' => is_array( $this->slow_queries )
 				? count( $this->slow_queries )
 				: null,
-			'slow_queries'     => is_array( $this->slow_queries )
-				? array_slice( $this->slow_queries, 0, $this->config->slow_queries_limit )
-				: null,
+			'slow_queries'     => $slow_queries,
 			'query_types'      => $this->query_types,
 		];
 	}
@@ -57,10 +67,8 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 			$query_type = $this->determine_query_type( $query );
 
 			$this->slow_queries[] = [
-				'sql'         => strlen( $query ) > 1024
-					? substr( $query, 0, 1024 )
-					: $query,
-				'sql_hash'    => md5( $query ),
+				// Raw SQL, normalized in gather() before anything is sent.
+				'sql'         => $query,
 				'start_time'  => $query_start,
 				'duration_ms' => $query_time,
 				'type'        => $query_type,
@@ -69,6 +77,20 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 		}
 
 		return $query_data;
+	}
+
+	/**
+	 * Replaces literal values so they never leave the site.
+	 */
+	protected function normalize_slow_query( array $slow_query ): array {
+		$sql = QueryNormalizer::normalize( $slow_query['sql'] );
+
+		$slow_query['sql']      = strlen( $sql ) > self::MAX_SQL_LENGTH
+			? substr( $sql, 0, self::MAX_SQL_LENGTH )
+			: $sql;
+		$slow_query['sql_hash'] = md5( $sql );
+
+		return $slow_query;
 	}
 
 	protected function parse_queries(): void {

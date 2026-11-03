@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run build` - Build production assets
 - `npm run watch` - Watch and rebuild assets during development
 - `npm run typecheck` - Run TypeScript type checking
+- `composer test` - Run PHPUnit tests (requires `composer install` with dev dependencies)
 - `./build.sh` - Create distributable zip file (removes dev dependencies)
 
 ## Architecture Overview
