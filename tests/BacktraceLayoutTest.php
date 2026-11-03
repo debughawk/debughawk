@@ -140,6 +140,52 @@ class BacktraceLayoutTest extends TestCase {
 		$this->assertAttribution( 'plugin', 'acme', $trace, $this->layout( "$root/wp/", "$root/wp/wp-content" ) );
 	}
 
+	public function test_symlinked_single_file_plugin(): void {
+		$root = $this->filesystem( [ 'wp-content/plugins', 'shared' ] );
+		touch( "$root/shared/hello-dolly-1.7.php" );
+		symlink( "$root/shared/hello-dolly-1.7.php", "$root/wp-content/plugins/hello.php" );
+
+		// As wp_register_plugin_realpath() records it: the directories, not the file.
+		$GLOBALS['wp_plugin_paths'] = [ "$root/wp-content/plugins" => realpath( "$root/shared" ) ];
+
+		$trace = $this->query_from( [
+			[ 'file' => realpath( "$root/shared/hello-dolly-1.7.php" ), 'line' => 70, 'function' => 'query', 'class' => 'wpdb' ],
+		], "$root/wp-content" );
+
+		$this->assertAttribution( 'plugin', 'hello.php', $trace, $this->layout( "$root/", "$root/wp-content" ) );
+	}
+
+	public function test_plugin_symlinked_to_a_folder_inside_wordpress(): void {
+		$root = $this->filesystem( [ 'wp-content/plugins', 'shared-plugins/acme' ] );
+		symlink( "$root/shared-plugins/acme", "$root/wp-content/plugins/acme" );
+
+		// The real path is inside ABSPATH, so without the symlink it would look like core.
+		$trace = $this->query_from( [
+			[ 'file' => realpath( "$root/shared-plugins/acme" ) . '/acme.php', 'line' => 5, 'function' => 'query', 'class' => 'wpdb' ],
+		], "$root/wp-content" );
+
+		$this->assertAttribution( 'plugin', 'acme', $trace, $this->layout( "$root/", "$root/wp-content" ) );
+	}
+
+	public function test_symlinked_debughawk_is_skipped(): void {
+		$root = $this->filesystem( [ 'wp-content/plugins/acme', 'repos/debughawk/src/Collectors' ] );
+		symlink( "$root/repos/debughawk", "$root/wp-content/plugins/debughawk" );
+
+		// WordPress records DebugHawk's own real path, as it does for any symlinked plugin.
+		$GLOBALS['wp_plugin_paths'] = [ "$root/wp-content/plugins/debughawk" => realpath( "$root/repos/debughawk" ) ];
+
+		$debughawk = realpath( "$root/repos/debughawk" );
+		$trace     = [
+			[ 'file' => "$debughawk/src/Collectors/DatabaseCollector.php", 'line' => 1, 'function' => '__construct', 'class' => Backtrace::class ],
+			[ 'file' => "$debughawk/src/Collectors/DatabaseCollector.php", 'line' => 2, 'function' => 'add_slow_query', 'class' => DatabaseCollector::class ],
+			[ 'file' => "$root/wp-content/db.php", 'line' => 90, 'function' => 'track_slow_query', 'class' => DatabaseCollector::class ],
+			[ 'file' => "$root/wp-content/plugins/acme/acme.php", 'line' => 5, 'function' => 'query', 'class' => 'wpdb' ],
+		];
+
+		// dirname( __DIR__ ) in Backtrace is always the real path.
+		$this->assertAttribution( 'plugin', 'acme', $trace, $this->layout( "$root/", "$root/wp-content", [ 'debughawk' => $debughawk ] ) );
+	}
+
 	private function assertAttribution( string $component, ?string $slug, array $trace, array $directories ): void {
 		$result = ( new LayoutBacktrace( $trace, $directories ) )->parse();
 

@@ -69,14 +69,16 @@ class Backtrace {
 	 */
 	public function parse(): ?array {
 		$prefixes    = $this->prefixes();
-		$core_frame  = null;
+		$trace       = array_values( $this->trace );
+		$core_index  = null;
+		$other       = null;
 		$in_plumbing = true;
 
-		foreach ( $this->trace as $frame ) {
+		foreach ( $trace as $index => $frame ) {
 			$is_ignored = $this->is_ignored( $frame );
 
-			if ( $core_frame === null && ! $is_ignored ) {
-				$core_frame = $frame;
+			if ( $core_index === null && ! $is_ignored ) {
+				$core_index = $index;
 			}
 
 			// The frames at the start are DebugHawk, the hook it listens on and
@@ -88,7 +90,11 @@ class Backtrace {
 			if ( ! empty( $frame['file'] ) ) {
 				$component = $this->classify( $frame['file'], $prefixes );
 
-				if ( $component !== null && $component['component'] !== 'core' ) {
+				if ( $component !== null && $component['component'] === 'other' ) {
+					// Drop-ins such as object-cache.php usually run on behalf of a
+					// plugin or theme further out, so they're only a fallback.
+					$other = $other ?? $this->describe( $frame, $component );
+				} elseif ( $component !== null && $component['component'] !== 'core' ) {
 					return $this->describe( $frame, $component );
 				}
 			}
@@ -98,17 +104,43 @@ class Backtrace {
 			}
 		}
 
-		// Only core is involved: report the first frame outside the hook,
-		// HTTP and wpdb plumbing, as the most useful place in core.
-		if ( $core_frame === null || empty( $core_frame['file'] ) ) {
-			return null;
+		if ( $other !== null ) {
+			return $other;
 		}
 
-		$component = $this->classify( $core_frame['file'], $prefixes );
-
-		return $component !== null
-			? $this->describe( $core_frame, $component )
+		return $core_index !== null
+			? $this->describe_core( $trace, $core_index, $prefixes )
 			: null;
+	}
+
+	/**
+	 * Describes the most useful place in core: the first frame outside the
+	 * hook, HTTP and wpdb plumbing. When that frame is a hook callback, its
+	 * file and line are WP_Hook's, so they're taken from inside the callback
+	 * instead (where it made its next call), keeping the callback as the
+	 * function.
+	 */
+	protected function describe_core( array $trace, int $index, array $prefixes ): ?array {
+		$frame    = $trace[ $index ];
+		$location = $frame;
+
+		if ( $index > 0 && ! empty( $trace[ $index - 1 ]['file'] ) && $this->is_hook_dispatch( $trace[ $index + 1 ] ?? [] ) ) {
+			$location = $trace[ $index - 1 ];
+		}
+
+		foreach ( [ $location, $frame ] as $candidate ) {
+			if ( empty( $candidate['file'] ) ) {
+				continue;
+			}
+
+			$component = $this->classify( $candidate['file'], $prefixes );
+
+			if ( $component !== null ) {
+				return $this->describe( $frame, $component, $candidate );
+			}
+		}
+
+		return null;
 	}
 
 	protected function is_hook_dispatch( array $frame ): bool {
@@ -131,14 +163,27 @@ class Backtrace {
 	protected function classify( string $file, array $prefixes ): ?array {
 		$path = DIRECTORY_SEPARATOR === '\\' ? str_replace( '\\', '/', $file ) : $file;
 
-		// Symlinked plugins: PHP reports the real path, so map it back.
-		foreach ( $GLOBALS['wp_plugin_paths'] ?? [] as $plugin_path => $real_path ) {
-			if ( strpos( $path, $real_path . '/' ) === 0 ) {
-				$path = $plugin_path . substr( $path, strlen( $real_path ) );
-				break;
+		$match = $this->match_prefix( $path, $prefixes );
+
+		// A symlinked plugin outside every known directory: WordPress records
+		// where its real path maps to, so try again with that.
+		if ( $match === false ) {
+			foreach ( $GLOBALS['wp_plugin_paths'] ?? [] as $plugin_path => $real_path ) {
+				if ( strpos( $path, $real_path . '/' ) === 0 ) {
+					$match = $this->match_prefix( $plugin_path . substr( $path, strlen( $real_path ) ), $prefixes );
+					break;
+				}
 			}
 		}
 
+		return $match === false ? null : $match;
+	}
+
+	/**
+	 * @return array{component: string, slug: ?string}|false|null The component,
+	 *         false if no prefix matched, or null for files that are never responsible.
+	 */
+	protected function match_prefix( string $path, array $prefixes ) {
 		// Longest prefix first, so the most specific directory wins.
 		foreach ( $prefixes as [ $prefix, $component, $slug ] ) {
 			if ( strpos( $path, $prefix ) !== 0 ) {
@@ -155,7 +200,7 @@ class Backtrace {
 			];
 		}
 
-		return null;
+		return false;
 	}
 
 	/**
@@ -172,8 +217,13 @@ class Backtrace {
 		return $slash === false ? $relative_path : substr( $relative_path, 0, $slash );
 	}
 
-	protected function describe( array $frame, array $component ): array {
-		$class = $frame['class'] ?? null;
+	/**
+	 * @param array|null $location The frame to take the file and line from,
+	 *                             if not the frame itself.
+	 */
+	protected function describe( array $frame, array $component, ?array $location = null ): array {
+		$class    = $frame['class'] ?? null;
+		$location = $location ?? $frame;
 
 		if ( in_array( $class, self::WPDB_DROPINS, true ) ) {
 			$class = 'wpdb';
@@ -181,8 +231,8 @@ class Backtrace {
 
 		return array_filter( [
 			'component' => $component['component'],
-			'file'      => $frame['file'],
-			'line'      => $frame['line'] ?? null,
+			'file'      => $location['file'],
+			'line'      => $location['line'] ?? null,
 			'function'  => $frame['function'] ?? null,
 			'class'     => $class,
 			'slug'      => $component['slug'],
@@ -236,7 +286,11 @@ class Backtrace {
 		}
 
 		if ( $directories['plugins'] !== null ) {
-			array_push( $prefixes, ...$this->directory_prefixes( $directories['plugins'], 'plugin' ) );
+			array_push(
+				$prefixes,
+				...$this->directory_prefixes( $directories['plugins'], 'plugin' ),
+				...$this->symlink_prefixes( $directories['plugins'], 'plugin' )
+			);
 		}
 
 		if ( $directories['mu_plugins'] !== null ) {
@@ -259,8 +313,10 @@ class Backtrace {
 			array_push( $prefixes, ...$this->directory_prefixes( $directories['abspath'], 'core' ) );
 		}
 
+		// Longest first. On a tie, files that are never responsible win, so
+		// DebugHawk is skipped even when it's a symlinked plugin itself.
 		usort( $prefixes, static function ( array $a, array $b ): int {
-			return strlen( $b[0] ) <=> strlen( $a[0] );
+			return ( strlen( $b[0] ) <=> strlen( $a[0] ) ) ?: ( ( $a[1] !== null ) <=> ( $b[1] !== null ) );
 		} );
 
 		self::$prefixes_directories = $directories;
@@ -300,9 +356,11 @@ class Backtrace {
 	}
 
 	/**
-	 * Real paths of symlinked themes or mu-plugins in a directory. WordPress
-	 * records these for plugins ($wp_plugin_paths) but not for themes or
-	 * mu-plugins, which managed hosts often symlink.
+	 * Real paths of symlinked plugins, themes or mu-plugins in a directory,
+	 * so each gets its folder or file name as its slug. WordPress records
+	 * symlinked plugins in $wp_plugin_paths, but not themes or mu-plugins
+	 * (which managed hosts often symlink), and its mapping names a symlinked
+	 * single-file plugin after its target.
 	 */
 	protected function symlink_prefixes( string $directory, string $component ): array {
 		$entries = is_dir( $directory ) ? scandir( $directory ) : false;
@@ -331,7 +389,7 @@ class Backtrace {
 			$prefixes[] = [
 				is_dir( $real_path ) ? rtrim( $real_path, '/' ) . '/' : $real_path,
 				$component,
-				$component === 'theme' ? $entry : null,
+				$component === 'mu-plugin' ? null : $entry,
 			];
 		}
 

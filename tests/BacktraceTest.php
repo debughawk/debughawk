@@ -121,7 +121,39 @@ class BacktraceTest extends TestCase {
 					[ 'file' => self::CORE . '/general-template.php', 'line' => 3050, 'function' => 'do_action' ],
 					[ 'file' => self::THEMES . '/twentyten/header.php', 'line' => 20, 'function' => 'wp_head' ],
 				] ),
-				[ 'component' => 'core', 'file' => self::CORE . '/class-wp-hook.php', 'line' => 324, 'function' => 'rel_canonical' ],
+				// The callback's name, with the file and line inside it rather than WP_Hook's.
+				[ 'component' => 'core', 'file' => self::CORE . '/link-template.php', 'line' => 4000, 'function' => 'rel_canonical' ],
+			],
+			'core callback on a plugin\'s own hook'        => [
+				// Intended: the core callback made the query, so the plugin that
+				// fired the hook isn't blamed.
+				$this->query_from( [
+					[ 'file' => self::CORE . '/option.php', 'line' => 1200, 'function' => 'get_results', 'class' => 'wpdb' ],
+					[ 'file' => self::CORE . '/class-wp-hook.php', 'line' => 324, 'function' => 'wp_load_alloptions' ],
+					[ 'file' => self::CORE . '/class-wp-hook.php', 'line' => 348, 'function' => 'apply_filters', 'class' => 'WP_Hook' ],
+					[ 'file' => self::CORE . '/plugin.php', 'line' => 517, 'function' => 'do_action', 'class' => 'WP_Hook' ],
+					[ 'file' => self::PLUGINS . '/acme/acme.php', 'line' => 80, 'function' => 'do_action' ],
+				] ),
+				[ 'component' => 'core', 'file' => self::CORE . '/option.php', 'line' => 1200, 'function' => 'wp_load_alloptions' ],
+			],
+			'drop-in called on behalf of a plugin'        => [
+				$this->query_from( [
+					[ 'file' => '/srv/www/wp-content/object-cache.php', 'line' => 90, 'function' => 'get_var', 'class' => 'wpdb' ],
+					[ 'file' => self::CORE . '/cache.php', 'line' => 150, 'function' => 'get', 'class' => 'WP_Object_Cache' ],
+					[ 'file' => self::CORE . '/option.php', 'line' => 120, 'function' => 'wp_cache_get' ],
+					[ 'file' => self::PLUGINS . '/acme/acme.php', 'line' => 31, 'function' => 'get_option' ],
+				] ),
+				[ 'component' => 'plugin', 'file' => self::PLUGINS . '/acme/acme.php', 'line' => 31, 'function' => 'get_option', 'slug' => 'acme' ],
+			],
+			'drop-in called from a core hook callback'    => [
+				$this->query_from( [
+					[ 'file' => '/srv/www/wp-content/object-cache.php', 'line' => 90, 'function' => 'get_var', 'class' => 'wpdb' ],
+					[ 'file' => self::CORE . '/option.php', 'line' => 120, 'function' => 'wp_cache_get' ],
+					[ 'file' => self::CORE . '/class-wp-hook.php', 'line' => 324, 'function' => 'wp_load_alloptions' ],
+					[ 'file' => self::CORE . '/class-wp-hook.php', 'line' => 348, 'function' => 'apply_filters', 'class' => 'WP_Hook' ],
+					[ 'file' => self::THEMES . '/twentyten/header.php', 'line' => 20, 'function' => 'do_action' ],
+				] ),
+				[ 'component' => 'other', 'file' => '/srv/www/wp-content/object-cache.php', 'line' => 90, 'function' => 'get_var', 'class' => 'wpdb' ],
 			],
 			'plugin callback on a hook fired by a theme'  => [
 				$this->query_from( [
