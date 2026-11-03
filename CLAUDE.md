@@ -32,6 +32,7 @@ DebugHawk is a WordPress performance monitoring plugin that collects metrics and
 
 - **Database Drop-in**: `wp-content/db.php` extends wpdb to transparently monitor queries
 - **Sampling**: Configurable sample rates to control data collection frequency
+- **Attribution**: `Backtrace` blames a slow query or HTTP request on the innermost plugin, mu-plugin, theme or other wp-content file in the stack, skipping core, DebugHawk, the drop-in and files outside WordPress. A `WP_Hook` dispatch reached first means a core callback made the call, so it's attributed to core. Covered by `tests/BacktraceTest.php`
 - **Interface-based Design**: Components implement `NeedsInitiatingInterface` when they need initialization
 - **Manager Pattern**: Collectors and Dispatchers are managed by their respective managers for extensibility
 
