@@ -4,7 +4,7 @@ namespace DebugHawk\Dispatchers;
 
 use DebugHawk\CollectorManager;
 use DebugHawk\Config;
-use Exception;
+use DebugHawk\Util;
 
 abstract class Dispatcher {
 	protected Config $config;
@@ -27,7 +27,10 @@ abstract class Dispatcher {
 			$encrypted = openssl_encrypt( $payload, $algo, $this->config->secret, OPENSSL_RAW_DATA, $iv );
 
 			return base64_encode( $iv . $encrypted );
-		} catch ( Exception $e ) {
+		} catch ( \Throwable $e ) {
+			// Never break the page DebugHawk is measuring.
+			Util::log_error( 'Could not prepare metrics: ' . $e->getMessage() );
+
 			return '';
 		}
 	}
