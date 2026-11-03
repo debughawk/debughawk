@@ -20,10 +20,23 @@ class OutgoingRequestsCollector extends Collector implements NeedsInitiatingInte
 	/** How many requests were made, including ones not kept. */
 	protected int $request_count = 0;
 
+	/**
+	 * Requests that have started but not finished, newest last, each with the
+	 * URL and method used to match its end.
+	 *
+	 * @var array<int, array{key: int, url: string, method: string}>
+	 */
+	protected array $in_flight = [];
+
+	/**
+	 * Request arguments are never changed: another plugin may key a response
+	 * cache on them. Starting last means a request another plugin answers
+	 * (with a mock or a cached response) is never timed, and ending first
+	 * means other plugins' http_api_debug callbacks aren't timed with it.
+	 */
 	public function init(): void {
-		add_filter( 'http_request_args', [ $this, 'make_request_traceable' ], 9999, 2 );
-		add_filter( 'pre_http_request', [ $this, 'track_request_start' ], 9999, 3 );
-		add_action( 'http_api_debug', [ $this, 'track_request_end' ], 9999, 5 );
+		add_filter( 'pre_http_request', [ $this, 'track_request_start' ], PHP_INT_MAX, 3 );
+		add_action( 'http_api_debug', [ $this, 'track_request_end' ], PHP_INT_MIN, 5 );
 	}
 
 	public function gather(): array {
@@ -45,29 +58,29 @@ class OutgoingRequestsCollector extends Collector implements NeedsInitiatingInte
 		];
 	}
 
-	public function make_request_traceable( $args, $url ) {
-		$args['_debughawk_request_id'] = uniqid( 'http_', true );
-
-		return $args;
-	}
-
 	public function track_request_start( $preempt, $args, $url ) {
-		$request_id = $args['_debughawk_request_id'] ?? null;
-
-		if ( ! $request_id ) {
+		// Another plugin answered it, so it never goes over the network.
+		if ( $preempt !== false ) {
 			return $preempt;
 		}
 
-		$this->request_count ++;
+		$key    = ++ $this->request_count;
+		$method = $args['method'] ?? 'GET';
 
 		$backtrace = new Backtrace();
 
-		$this->requests[ $request_id ] = [
-			'url'         => Util::redact_url( $url ),
-			'blocking'    => $args['blocking'],
+		$this->requests[ $key ] = [
+			'url'         => Util::redact_url( (string) $url ),
+			'blocking'    => $args['blocking'] ?? true,
 			'start_time'  => microtime( true ),
-			'http_method' => $args['method'] ?? 'GET',
+			'http_method' => $method,
 			'backtrace'   => $backtrace->parse(),
+		];
+
+		$this->in_flight[] = [
+			'key'    => $key,
+			'url'    => (string) $url,
+			'method' => $method,
 		];
 
 		return $preempt;
@@ -82,24 +95,61 @@ class OutgoingRequestsCollector extends Collector implements NeedsInitiatingInte
 	 * so they're left without a duration.
 	 */
 	public function track_request_end( $response, $context, $class, $args, $url ): void {
-		$request_id = $args['_debughawk_request_id'] ?? null;
+		$key = $this->finish_in_flight( (string) $url, $args['method'] ?? 'GET' );
 
-		if ( ! $request_id || ! isset( $this->requests[ $request_id ] ) || empty( $args['blocking'] ) ) {
+		if ( $key === null || ! isset( $this->requests[ $key ] ) || empty( $args['blocking'] ) ) {
 			return;
 		}
 
-		$duration = microtime( true ) - $this->requests[ $request_id ]['start_time'];
+		$duration = microtime( true ) - $this->requests[ $key ]['start_time'];
 
-		$this->requests[ $request_id ]['duration_ms'] = Util::seconds_to_milliseconds( $duration );
+		$this->requests[ $key ]['duration_ms'] = Util::seconds_to_milliseconds( $duration );
 
 		if ( is_wp_error( $response ) ) {
 			// Such as "cURL error 28: Operation timed out after 5001 milliseconds".
-			$this->requests[ $request_id ]['error'] = Util::truncate( $response->get_error_message(), 256 );
+			$this->requests[ $key ]['error'] = Util::truncate( $response->get_error_message(), 256 );
 		} else {
-			$this->requests[ $request_id ]['http_status'] = wp_remote_retrieve_response_code( $response );
+			$this->requests[ $key ]['http_status'] = wp_remote_retrieve_response_code( $response );
 		}
 
 		$this->drop_fastest_finished_request();
+	}
+
+	/**
+	 * Finds which in-flight request has ended. Requests through WP_Http never
+	 * overlap, since each call returns only once its request is done, so it's
+	 * the newest one. Preferring a request with the same URL and method means
+	 * an unusual interleaving can't pair an end with the wrong start.
+	 *
+	 * WordPress can empty or change the URL while validating it, before
+	 * failing the request, so with no URL match the newest request with the
+	 * same method is used.
+	 */
+	protected function finish_in_flight( string $url, string $method ): ?int {
+		$match = null;
+
+		for ( $index = count( $this->in_flight ) - 1; $index >= 0; $index -- ) {
+			if ( $this->in_flight[ $index ]['method'] !== $method ) {
+				continue;
+			}
+
+			if ( $this->in_flight[ $index ]['url'] === $url ) {
+				$match = $index;
+				break;
+			}
+
+			$match = $match ?? $index;
+		}
+
+		if ( $match === null ) {
+			return null;
+		}
+
+		$key = $this->in_flight[ $match ]['key'];
+
+		array_splice( $this->in_flight, $match, 1 );
+
+		return $key;
 	}
 
 	/**
