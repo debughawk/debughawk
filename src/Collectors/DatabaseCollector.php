@@ -42,10 +42,9 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 
 		if ( isset( $wpdb ) && property_exists( $wpdb, 'debughawk_stats' ) ) {
 			// The drop-in counts every query itself and only calls back for slow ones.
-			$this->uses_dropin_stats        = true;
-			$wpdb->debughawk_slow_threshold = $this->slow_threshold_seconds;
-
-			add_action( 'debughawk_slow_query', [ $this, 'track_slow_query' ], 10, 3 );
+			$this->uses_dropin_stats            = true;
+			$wpdb->debughawk_slow_threshold     = $this->slow_threshold_seconds;
+			$wpdb->debughawk_slow_query_handler = [ $this, 'track_slow_query' ];
 
 			return;
 		}

@@ -54,10 +54,16 @@ class DebugHawkDB extends wpdb {
 	];
 
 	/**
-	 * Queries slower than this many seconds are passed to the
-	 * 'debughawk_slow_query' action. Set by the plugin once it loads.
+	 * Queries slower than $debughawk_slow_threshold seconds are passed to this
+	 * callable. Both are set by the plugin once it loads. It's called directly,
+	 * not through an action, so slow query backtraces match those from
+	 * $wpdb->queries and fast queries never touch the hook system.
+	 *
+	 * @var callable|null
 	 */
-	public ?float $debughawk_slow_threshold = null;
+	public $debughawk_slow_query_handler = null;
+
+	public float $debughawk_slow_threshold = 0.0;
 
 	/**
 	 * Time spent in queries run from inside the current query, such as the
@@ -93,8 +99,8 @@ class DebugHawkDB extends wpdb {
 		$this->debughawk_stats['types'][ $type ]['count'] ++;
 		$this->debughawk_stats['types'][ $type ]['time']  += $query_time;
 
-		if ( $this->debughawk_slow_threshold !== null && $query_time > $this->debughawk_slow_threshold ) {
-			do_action( 'debughawk_slow_query', $query, $query_time, $start );
+		if ( $this->debughawk_slow_query_handler !== null && $query_time > $this->debughawk_slow_threshold ) {
+			( $this->debughawk_slow_query_handler )( $query, $query_time, $start );
 		}
 
 		return $result;

@@ -55,6 +55,6 @@ define('DEBUGHAWK_CONFIG', [
 
 ### Database Monitoring
 
-The plugin copies its `wp-content/db.php` to WordPress's `wp-content/db.php` on activation. This drop-in replacement for wpdb times every query and keeps running totals (count, time, per-type), passing only slow queries to the plugin via the `debughawk_slow_query` action. It doesn't store queries, so memory stays flat.
+The plugin copies its `wp-content/db.php` to WordPress's `wp-content/db.php` on activation. This drop-in replacement for wpdb times every query and keeps running totals (count, time, per-type), passing only slow queries to `DatabaseCollector::track_slow_query()`, which it calls directly (not through a hook) so backtraces stay accurate. It doesn't store queries, so memory stays flat.
 
 The installed copy only updates on an admin page load when its `Version` header is higher than the installed one, so bump it whenever `db.php` changes. Until then, and when another drop-in is in place (such as Query Monitor's) or `SAVEQUERIES` is on without ours, `DatabaseCollector` falls back to the `log_query_custom_data` filter and `$wpdb->queries`.
