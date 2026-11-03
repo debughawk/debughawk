@@ -38,6 +38,21 @@ class BeaconDispatcherTest extends TestCase {
 		$this->assertStringContainsString( "<script>window.DebugHawk = '", $this->output() );
 	}
 
+	public function test_prints_nothing_when_the_payload_could_not_be_prepared(): void {
+		$GLOBALS['test_enqueued_scripts'] = [ 'debughawk-beacon' ];
+
+		$dispatcher = new class( TestConfig::make(), new CollectorManager() ) extends BeaconDispatcher {
+			protected function gather_and_encrypt(): string {
+				return '';
+			}
+		};
+
+		ob_start();
+		$dispatcher->output_beacon_metrics();
+
+		$this->assertSame( '', ob_get_clean() );
+	}
+
 	private function output( array $config = [ 'secret' => '0123456789abcdef' ] ): string {
 		$dispatcher = new BeaconDispatcher( TestConfig::make( $config ), new CollectorManager() );
 

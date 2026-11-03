@@ -28,8 +28,16 @@ class BeaconDispatcher extends Dispatcher implements NeedsInitiatingInterface {
 			return;
 		}
 
+		$payload = $this->gather_and_encrypt();
+
+		// Preparing it failed. Without window.DebugHawk the beacon sends nothing,
+		// rather than an event with no server data.
+		if ( $payload === '' ) {
+			return;
+		}
+
 		echo '<!-- DebugHawk -->' . "\n\n";
-		wp_print_inline_script_tag( "window.DebugHawk = '" . esc_js( $this->gather_and_encrypt() ) . "';" );
+		wp_print_inline_script_tag( "window.DebugHawk = '" . esc_js( $payload ) . "';" );
 	}
 
 	protected function should_output_beacon(): bool {
