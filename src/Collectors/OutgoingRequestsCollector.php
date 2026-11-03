@@ -21,9 +21,7 @@ class OutgoingRequestsCollector extends Collector implements NeedsInitiatingInte
 		return [
 			'request_count' => count( $this->requests ),
 			'requests'      => array_map( static function ( $request ) {
-				$request['url'] = strlen( $request['url'] ) > 256
-					? substr( $request['url'], 0, 256 )
-					: $request['url'];
+				$request['url'] = Util::truncate( $request['url'], 256 );
 
 				return $request;
 			}, $this->requests ),

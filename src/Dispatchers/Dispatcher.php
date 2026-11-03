@@ -18,7 +18,9 @@ abstract class Dispatcher {
 
 	protected function gather_and_encrypt(): string {
 		try {
-			$payload = json_encode( $this->collectors->gather(), JSON_THROW_ON_ERROR );
+			// Invalid UTF-8 (from a URL or SQL, say) is replaced rather than
+			// failing the whole payload.
+			$payload = json_encode( $this->collectors->gather(), JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE );
 
 			$algo  = 'aes-128-ctr';
 			$ivlen = openssl_cipher_iv_length( $algo );
