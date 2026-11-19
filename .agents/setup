@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Prepares an Amp orb with PHP, Composer and Node dependencies for DebugHawk.
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+step() {
+  local name="$1"
+  shift
+  echo "==> $name"
+  local start=$SECONDS
+  "$@"
+  echo "<== $name ($((SECONDS - start))s)"
+}
+
+install_system_packages() {
+  # PHPUnit 9 needs dom, mbstring, xml and xmlwriter; zip/unzip let Composer
+  # download dist archives and let build.sh create the plugin zip.
+  local packages=(php-cli php-xml php-mbstring php-curl php-zip unzip zip composer)
+  local missing=()
+  for package in "${packages[@]}"; do
+    dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q 'install ok installed' || missing+=("$package")
+  done
+  if ((${#missing[@]})); then
+    sudo apt-get update -qq
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "${missing[@]}"
+  fi
+}
+
+install_composer_dependencies() {
+  # The repository ignores composer.lock, so the first install resolves it locally.
+  composer install --no-interaction --no-progress
+}
+
+step "System packages" install_system_packages
+step "Composer dependencies" install_composer_dependencies
+step "Node dependencies" npm ci --no-audit --no-fund
+step "Build beacon assets" npm run build
