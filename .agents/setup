@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# Prepares an Amp orb with PHP, Composer and Node dependencies for DebugHawk.
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+step() {
+  local name="$1"
+  shift
+  echo "==> $name"
+  local start=$SECONDS
+  "$@"
+  echo "<== $name ($((SECONDS - start))s)"
+}
+
+install_system_packages() {
+  # PHPUnit 9 needs dom, mbstring, xml and xmlwriter; zip/unzip let Composer
+  # download dist archives and let build.sh create the plugin zip.
+  # mariadb-server and php-mysql run the local WordPress site.
+  local packages=(php-cli php-xml php-mbstring php-curl php-zip php-mysql unzip zip composer mariadb-server)
+  local missing=()
+  for package in "${packages[@]}"; do
+    dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q 'install ok installed' || missing+=("$package")
+  done
+  if ((${#missing[@]})); then
+    sudo apt-get update -qq
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "${missing[@]}"
+  fi
+}
+
+install_composer_dependencies() {
+  # The repository ignores composer.lock, so the first install resolves it locally.
+  composer install --no-interaction --no-progress
+}
+
+install_wp_cli() {
+  if ! command -v wp >/dev/null; then
+    sudo curl -fsSL -o /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+    sudo chmod +x /usr/local/bin/wp
+  fi
+}
+
+# A WordPress site outside the checkout with this plugin symlinked in.
+# .amp/services.yaml serves it; credentials are admin / password.
+install_wordpress() {
+  local wp_dir="$HOME/wordpress"
+  local repo_dir="$PWD"
+
+  # Systemd owns MariaDB, so it starts again in orbs restored from the snapshot.
+  sudo systemctl enable --now mariadb
+  sudo mysql -e "CREATE DATABASE IF NOT EXISTS wordpress;
+    CREATE USER IF NOT EXISTS 'wordpress'@'localhost' IDENTIFIED BY 'wordpress';
+    GRANT ALL PRIVILEGES ON wordpress.* TO 'wordpress'@'localhost';"
+
+  # downloads.wordpress.org occasionally drops the connection, so retry.
+  local attempt
+  for attempt in 1 2 3; do
+    [[ -f "$wp_dir/wp-load.php" ]] && break
+    wp core download --path="$wp_dir" --force --quiet || sleep $((attempt * 2))
+  done
+  [[ -f "$wp_dir/wp-load.php" ]]
+
+  if [[ ! -f "$wp_dir/wp-config.php" ]]; then
+    wp config create --path="$wp_dir" --dbname=wordpress --dbuser=wordpress --dbpass=wordpress \
+      --dbhost=localhost --skip-check --quiet --extra-php < .agents/wordpress/wp-config-extra.php
+  fi
+
+  wp core is-installed --path="$wp_dir" || wp core install --path="$wp_dir" --url=http://localhost \
+    --title="DebugHawk Dev" --admin_user=admin --admin_password=password \
+    --admin_email=admin@example.com --skip-email --quiet
+
+  ln -sfn "$repo_dir" "$wp_dir/wp-content/plugins/debughawk"
+  mkdir -p "$wp_dir/wp-content/mu-plugins"
+  ln -sfn "$repo_dir/.agents/wordpress/debughawk-dev.php" "$wp_dir/wp-content/mu-plugins/debughawk-dev.php"
+
+  # Activation copies the plugin's db.php drop-in into wp-content.
+  wp plugin is-active debughawk --path="$wp_dir" || wp plugin activate debughawk --path="$wp_dir" --quiet
+
+  local guidance="$HOME/.config/amp/AGENTS.md"
+  local marker="# DebugHawk local WordPress"
+  mkdir -p "$(dirname "$guidance")"
+  if ! grep -Fqx "$marker" "$guidance" 2>/dev/null; then
+    cat >> "$guidance" <<EOF
+
+$marker
+
+- \`amp orb services ensure\` serves a WordPress site from $wp_dir with this checkout symlinked in as the active plugin; \`/?dev-login\` signs in as admin (password \`password\`).
+- Beacons go to the site's own \`/debughawk-dev/beacon\` endpoint, which decrypts each one and appends it as a JSON line to $wp_dir/wp-content/debughawk-beacons.log. A beacon is sent when the page is hidden, e.g. after navigating away.
+- The page loads \`resources/dist/beacon.js\` from this checkout, so run \`npm run build\` after changing \`resources/src\`. PHP errors go to $wp_dir/wp-content/debug.log.
+EOF
+  fi
+}
+
+step "System packages" install_system_packages
+step "WP-CLI" install_wp_cli
+step "Composer dependencies" install_composer_dependencies
+step "Node dependencies" npm ci --no-audit --no-fund
+step "Build beacon assets" npm run build
+step "WordPress" install_wordpress

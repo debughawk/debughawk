@@ -1,0 +1,14 @@
+services:
+  wordpress:
+    # A local WordPress site with this plugin active, installed by .agents/setup.
+    command: wp server --path="$HOME/wordpress" --host=0.0.0.0 --port="$PORT"
+    env:
+      PHP_CLI_SERVER_WORKERS: "4"
+    health: /wp-login.php
+    portal:
+      url: /?dev-login
+      title: WordPress
+      description: Signs in as admin (password "password"). Beacons are logged to ~/wordpress/wp-content/debughawk-beacons.log.
+    portals:
+      - url: /
+        title: Site
