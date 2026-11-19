@@ -14,7 +14,7 @@ Performance monitoring built for WordPress. Core Web Vitals from real visitors, 
 
 **Find out why your WordPress site is slow without deactivating plugins one by one.** DebugHawk monitors every page load on your WordPress site, front end and back end. It shows you what's slowing each page down and which plugin or theme is behind it.
 
-[Try the live demo](https://eu.debughawk.com/demo), no account needed.
+[Try the live demo](https://eu.debughawk.com/demo?utm_source=wordpress.org&utm_medium=plugin-listing&utm_campaign=readme&utm_content=intro-demo), no account needed.
 
 = Why WordPress sites slow down =
 
@@ -68,11 +68,11 @@ DebugHawk traces slow database queries and external requests back to the plugin 
 
 = Plans =
 
-Every plan includes every feature and unlimited team members. The Free plan covers one WordPress site and shows your latest 10,000 pageviews from up to the last 7 days. Paid plans are priced by the number of sites you look after and keep up to 90 days of history. See [pricing](https://debughawk.com/pricing).
+Every plan includes every feature and unlimited team members. The Free plan covers one WordPress site and shows your latest 10,000 pageviews from up to the last 7 days. Paid plans are priced by the number of sites you look after and keep up to 90 days of history. See [pricing](https://debughawk.com/pricing?utm_source=wordpress.org&utm_medium=plugin-listing&utm_campaign=readme&utm_content=pricing).
 
 = Get started =
 
-1. Create a free account at [debughawk.com](https://debughawk.com)
+1. Create a free account at [debughawk.com](https://debughawk.com/?utm_source=wordpress.org&utm_medium=plugin-listing&utm_campaign=readme&utm_content=getting-started-signup)
 2. Install and activate this plugin
 3. Add your site configuration to `wp-config.php`
 4. Visit your WordPress site and watch the data arrive in your dashboard
@@ -93,7 +93,7 @@ Every plan includes every feature and unlimited team members. The Free plan cove
 
 **Connecting your site:**
 
-1. Sign up for a [DebugHawk account](https://debughawk.com). The Free plan needs no credit card.
+1. Sign up for a [DebugHawk account](https://debughawk.com/?utm_source=wordpress.org&utm_medium=plugin-listing&utm_campaign=readme&utm_content=installation-signup). The Free plan needs no credit card.
 2. Copy your site configuration from the DebugHawk dashboard
 3. Add it to your `wp-config.php` file, above the line `/* That's all, stop editing! */`
 
@@ -139,7 +139,7 @@ DebugHawk uses Real User Monitoring (RUM), which measures Core Web Vitals in you
 
 = Do I need a DebugHawk account? =
 
-Yes. The plugin sends performance data to your DebugHawk dashboard, where you can explore trends, share reports and monitor all your WordPress sites. You can [create a free account](https://debughawk.com) in a couple of minutes.
+Yes. The plugin sends performance data to your DebugHawk dashboard, where you can explore trends, share reports and monitor all your WordPress sites. You can [create a free account](https://debughawk.com/?utm_source=wordpress.org&utm_medium=plugin-listing&utm_campaign=readme&utm_content=faq-signup) in a couple of minutes.
 
 = Is there a free plan? =
 
@@ -147,7 +147,7 @@ Yes. The Free plan covers one WordPress site with every feature included. DebugH
 
 = Can I try DebugHawk before installing it? =
 
-Yes. [Explore the live demo](https://eu.debughawk.com/demo) to see the DebugHawk dashboard monitoring a set of demo WordPress sites, with data that updates every minute.
+Yes. [Explore the live demo](https://eu.debughawk.com/demo?utm_source=wordpress.org&utm_medium=plugin-listing&utm_campaign=readme&utm_content=faq-demo) to see the DebugHawk dashboard monitoring a set of demo WordPress sites, with data that updates every minute.
 
 = Can I monitor multiple WordPress sites? =
 
