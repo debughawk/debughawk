@@ -11,15 +11,19 @@ namespace DebugHawk;
  * @property boolean $trace_admin_pages
  * @property int $slow_queries_threshold
  * @property int $slow_queries_limit
+ * @property int $duplicate_queries_threshold
+ * @property int $duplicate_queries_limit
  */
 class Config {
 	private const DEFAULT_CONFIG = [
-		'enabled'                => true,
-		'script_url'             => 'https://cdn.debughawk.com/script.js',
-		'sample_rate'            => 1,
-		'trace_admin_pages'      => true,
-		'slow_queries_threshold' => 50, // 50 ms
-		'slow_queries_limit'     => 10,
+		'enabled'                     => true,
+		'script_url'                  => 'https://cdn.debughawk.com/script.js',
+		'sample_rate'                 => 1,
+		'trace_admin_pages'           => true,
+		'slow_queries_threshold'      => 50, // 50 ms
+		'slow_queries_limit'          => 10,
+		'duplicate_queries_threshold' => 5, // Runs of the same query shape
+		'duplicate_queries_limit'     => 10,
 	];
 
 	private array $config;

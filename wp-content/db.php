@@ -2,9 +2,9 @@
 /**
  * Plugin Name: DebugHawk Database Drop-In
  * Plugin URI: https://debughawk.com/
- * Description: Database drop-in for DebugHawk to capture database metrics and slow queries.
+ * Description: Database drop-in for DebugHawk to capture database metrics, slow queries and duplicate queries.
  * Author: DebugHawk
- * Version: 1.3.0
+ * Version: 1.4.0
  * Requires PHP: 7.4
  * Requires WP: 6.3
  * License: GPLv3
@@ -54,10 +54,18 @@ class DebugHawkDB extends wpdb {
 	];
 
 	/**
-	 * Queries slower than $debughawk_slow_threshold seconds are passed to this
-	 * callable. Both are set by the plugin once it loads. It's called directly,
-	 * not through an action, so slow query backtraces match those from
-	 * $wpdb->queries and fast queries never touch the hook system.
+	 * Every query is passed to this callable, set by the plugin once it loads,
+	 * which looks for slow and duplicate queries. It's called directly, not
+	 * through an action, so backtraces taken in it match those from
+	 * $wpdb->queries and queries never touch the hook system.
+	 *
+	 * @var callable|null
+	 */
+	public $debughawk_query_handler = null;
+
+	/**
+	 * Set by plugin versions before 1.4.0, which only take slow queries:
+	 * those slower than $debughawk_slow_threshold seconds.
 	 *
 	 * @var callable|null
 	 */
@@ -99,7 +107,9 @@ class DebugHawkDB extends wpdb {
 		$this->debughawk_stats['types'][ $type ]['count'] ++;
 		$this->debughawk_stats['types'][ $type ]['time']  += $query_time;
 
-		if ( $this->debughawk_slow_query_handler !== null && $query_time > $this->debughawk_slow_threshold ) {
+		if ( $this->debughawk_query_handler !== null ) {
+			( $this->debughawk_query_handler )( $query, $query_time, $start );
+		} elseif ( $this->debughawk_slow_query_handler !== null && $query_time > $this->debughawk_slow_threshold ) {
 			( $this->debughawk_slow_query_handler )( $query, $query_time, $start );
 		}
 
