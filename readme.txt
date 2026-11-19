@@ -8,90 +8,96 @@ Requires PHP: 7.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Performance monitoring built specifically for WordPress. Track Core Web Vitals, slow database queries, external API calls and cache effectiveness.
+Performance monitoring built for WordPress. Core Web Vitals from real visitors, plus slow queries and requests traced to the plugin or theme.
 
 == Description ==
 
-**Monitor and debug WordPress performance issues with DebugHawk** - the performance monitoring tool built specifically for WordPress developers and site owners who need to identify what's slowing down their site.
+**Find out why your WordPress site is slow without deactivating plugins one by one.** DebugHawk monitors every page load on your WordPress site, front end and back end. It shows you what's slowing each page down and which plugin or theme is behind it.
 
-= Why WordPress Sites Are Slow =
+[Try the live demo](https://eu.debughawk.com/demo), no account needed.
 
-Slow WordPress sites lose visitors, conversions, and search rankings. But identifying the root cause is difficult when frontend tools like Google PageSpeed Insights only show part of the picture.
+= Why WordPress sites slow down =
 
-DebugHawk monitors both frontend and backend performance so you can see exactly what's slowing down your WordPress site - whether it's slow database queries, external API calls, or frontend Core Web Vitals problems.
+A slow WordPress site loses visitors, sales and search rankings. Finding the cause is hard when tools like Google PageSpeed Insights only show what happens in the browser.
 
-= What DebugHawk Monitors =
+DebugHawk shows both sides. You see Core Web Vitals from real visitors next to the server work behind each page: database queries, PHP time, external requests and caching. When a query or external request is slow, DebugHawk tells you which plugin or theme made it.
 
-**Frontend Performance Metrics:**
+= See which plugin or theme is involved =
 
-* **Core Web Vitals** - LCP (Largest Contentful Paint), INP (Interaction to Next Paint), CLS (Cumulative Layout Shift), TTFB (Time to First Byte), FCP (First Contentful Paint)
-* **Network Performance** - DNS lookup time, connection time
-* **Browser Resources** - HTTP requests, page weight, transfer sizes
+DebugHawk traces slow database queries and external requests back to the plugin or theme that made them. That includes code run from hooks, symlinked plugins and themes, and custom layouts such as Bedrock. You go straight to the code that needs attention.
 
-**Backend Performance Tracking:**
+= What DebugHawk monitors =
 
-* **Database Query Performance** - Slow queries, query count, total database time
-* **PHP Execution** - Execution time, memory usage
-* **External HTTP Requests** - API call timing, external service performance
-* **Object Cache Performance** - Hit ratio, cache effectiveness
-* **Page Cache Effectiveness** - Cache hits vs misses
+**In the browser, from real visitors:**
 
-= Debug Slow WordPress Sites =
+* **Core Web Vitals:** LCP (Largest Contentful Paint), INP (Interaction to Next Paint) and CLS (Cumulative Layout Shift), plus TTFB (Time to First Byte) and FCP (First Contentful Paint)
+* **Network:** DNS lookup and connection time
+* **Page weight:** requests, transfer sizes and assets grouped by plugin or theme
 
-Unlike generic performance tools, DebugHawk understands WordPress architecture. It shows you:
+**On the server:**
 
-* Which plugins are causing slow database queries
-* Which external APIs are timing out
-* Whether your caching is working effectively
+* **Database:** slow queries, query count and total database time
+* **PHP:** execution time and memory usage
+* **External requests:** timing, failures and timeouts for API calls and other outgoing HTTP requests
+* **Object cache:** hit ratio
+* **Page cache:** hits and misses, so you know your caching is working
 
-Perfect for WordPress developers, agencies managing multiple sites, and site owners who need to diagnose performance issues quickly.
+= What you get in the dashboard =
 
-= How It Works =
+* **What to fix first:** the slowest pages and queries, and the plugins and themes behind them
+* **All your sites together:** compare performance across every WordPress site you look after
+* **Page by page detail:** your slowest pages and what makes each one slow
+* **Single pageview traces:** open any pageview to see its slow queries, external requests and assets
+* **wp-admin monitoring:** track the admin screens your team and clients use every day
+* **Shareable reports:** send clients a performance report as a link
+* **Public API (beta):** pull your performance data into your own tools
 
-1. **Automatic Monitoring** - Once configured, DebugHawk tracks performance on every page load
-2. **Real User Monitoring (RUM)** - See actual performance data from your real visitors, not synthetic tests
-3. **Historical Data** - Track performance over time, identify when issues started
-4. **Encrypted Transmission** - All data is encrypted before sending to DebugHawk's dashboard
+= Privacy =
 
-No impact on site performance - the monitoring overhead is negligible.
+* DebugHawk replaces slow query values, such as emails, IDs and search terms, with placeholders before they leave your WordPress site
+* It strips query strings and credentials from page and external request URLs before sending them
+* It doesn't store visitor IP addresses
 
-= Perfect For =
+= Who it's for =
 
-* **WordPress Developers** debugging slow queries and performance bottlenecks
-* **Agencies** monitoring client site performance across multiple WordPress sites
-* **Site Owners** who need to understand why their WordPress site is slow
-* **WooCommerce Stores** tracking checkout performance and database optimization
-* **Membership Sites** monitoring server load and query performance
+* **Agencies and freelancers** looking after many client WordPress sites
+* **WordPress developers** tracking down slow queries and bottlenecks in production
+* **WooCommerce stores** where a slow checkout costs sales
+* **Membership and LMS sites** with busy logged-in traffic
+* **Site owners** who want to know why their WordPress site is slow
 
-= Get Started =
+= Plans =
 
-1. Sign up for a free trial at [DebugHawk.com](https://debughawk.com)
+Every plan includes every feature and unlimited team members. The Free plan covers one WordPress site and shows your latest 10,000 pageviews from up to the last 7 days. Paid plans are priced by the number of sites you look after and keep up to 90 days of history. See [pricing](https://debughawk.com/pricing).
+
+= Get started =
+
+1. Create a free account at [debughawk.com](https://debughawk.com)
 2. Install and activate this plugin
 3. Add your site configuration to `wp-config.php`
-4. Start monitoring your WordPress performance
+4. Visit your WordPress site and watch the data arrive in your dashboard
 
 == Installation ==
 
-**Automatic Installation:**
+**From your WordPress dashboard:**
 
-1. Log in to your WordPress admin dashboard
-2. Go to Plugins > Add New
-3. Search for "DebugHawk"
-4. Click "Install Now" and then "Activate"
+1. Go to Plugins > Add New Plugin
+2. Search for "DebugHawk"
+3. Click "Install Now", then "Activate"
 
-**Manual Installation:**
+**Manual installation:**
 
 1. Download the plugin ZIP file
-2. Upload to `/wp-content/plugins/debughawk` directory
-3. Activate the plugin through the 'Plugins' screen in WordPress
+2. Upload it to the `/wp-content/plugins/debughawk` directory
+3. Activate the plugin from the Plugins screen
 
-**Configuration:**
+**Connecting your site:**
 
-1. Sign up for a [DebugHawk account](https://debughawk.com) (free trial available)
+1. Sign up for a [DebugHawk account](https://debughawk.com). The Free plan needs no credit card.
 2. Copy your site configuration from the DebugHawk dashboard
-3. Add the configuration to your `wp-config.php` file, above the line `/* That's all, stop editing! */`
+3. Add it to your `wp-config.php` file, above the line `/* That's all, stop editing! */`
 
-Example configuration:
+Your configuration looks like this:
 
 ```php
 define( 'DEBUGHAWK_CONFIG', [
@@ -101,62 +107,82 @@ define( 'DEBUGHAWK_CONFIG', [
 ] );
 ```
 
-That's it! DebugHawk will now monitor your WordPress site's performance automatically.
+We recommend adding the configuration to `wp-config.php`, as it keeps your settings out of the database. You can also enter them under Settings > DebugHawk, which also has options for the sample rate, wp-admin monitoring and the slow query threshold.
+
+Once connected, DebugHawk starts monitoring your WordPress site's performance automatically.
 
 == Frequently Asked Questions ==
 
 = How does DebugHawk help debug slow WordPress sites? =
 
-DebugHawk monitors both frontend and backend performance. While tools like Google PageSpeed Insights only show frontend metrics, DebugHawk also tracks slow database queries, PHP execution time, external API calls, and memory usage - the backend issues that often cause WordPress sites to be slow.
+DebugHawk monitors front end and back end performance together. Alongside Core Web Vitals from real visitors, it records slow database queries, PHP execution time, external requests and memory usage. It then traces slow queries and requests to the plugin or theme that made them.
 
 = Will DebugHawk slow down my WordPress site? =
 
-No. DebugHawk has negligible performance impact. The monitoring code is lightweight and optimized to avoid affecting your site speed.
+No. The monitoring code is lightweight and has negligible overhead, even on pages that run thousands of database queries. The browser script loads from a global CDN and sends its data after the page has loaded.
 
-= What's the difference between DebugHawk and Query Monitor? =
+= How does DebugHawk work with Query Monitor? =
 
-Query Monitor shows performance data for your current admin session only. DebugHawk tracks performance across all visitors over time, stores historical data, and lets you identify patterns and trends. Think of Query Monitor as a debugger, and DebugHawk as production monitoring.
+DebugHawk works alongside Query Monitor. Query Monitor is great for debugging the page you're looking at right now. DebugHawk records performance for every visitor over time, so you can spot patterns, compare pages and see when a problem started.
 
-= Can DebugHawk identify which plugins are slowing down my site? =
+= Can DebugHawk show which plugin or theme is slowing a page? =
 
-Yes. DebugHawk tracks database queries, HTTP requests, and execution time, showing you which plugins are creating performance bottlenecks.
+Yes. DebugHawk attributes slow database queries and external requests to the plugin or theme that made them, so you can see where the time goes on each page.
 
 = Does DebugHawk work with WooCommerce? =
 
-Absolutely. DebugHawk is perfect for WooCommerce sites where slow checkout pages can cost you sales. Monitor database query performance, external payment gateway API calls, and Core Web Vitals on your product and checkout pages.
+Yes. On your product, cart and checkout pages, DebugHawk monitors database performance, Core Web Vitals and external requests, including calls to payment gateways.
 
 = How is Core Web Vitals data collected? =
 
-DebugHawk uses Real User Monitoring (RUM) to collect Core Web Vitals from actual visitors' browsers, giving you accurate field data instead of synthetic lab tests.
+DebugHawk uses Real User Monitoring (RUM), which measures Core Web Vitals in your real visitors' browsers. You get field data from real visits rather than a one-off lab test.
 
 = Do I need a DebugHawk account? =
 
-Yes. The plugin sends performance data to DebugHawk's dashboard where you can analyze trends, set up alerts, and monitor multiple WordPress sites. Start with a free trial at [debughawk.com](https://debughawk.com).
+Yes. The plugin sends performance data to your DebugHawk dashboard, where you can explore trends, share reports and monitor all your WordPress sites. You can [create a free account](https://debughawk.com) in a couple of minutes.
+
+= Is there a free plan? =
+
+Yes. The Free plan covers one WordPress site with every feature included. DebugHawk records every pageview, and your dashboard shows your latest 10,000 pageviews from up to the last 7 days. Upgrading shows everything DebugHawk has recorded, with longer history and more sites.
+
+= Can I try DebugHawk before installing it? =
+
+Yes. [Explore the live demo](https://eu.debughawk.com/demo) to see the DebugHawk dashboard monitoring a set of demo WordPress sites, with data that updates every minute.
 
 = Can I monitor multiple WordPress sites? =
 
-Yes. DebugHawk is designed for agencies and developers managing multiple WordPress sites. Monitor all your sites from one dashboard.
+Yes. DebugHawk is built for agencies and developers who look after many WordPress sites. Paid plans cover 5 to 200 sites in one dashboard, with unlimited team members.
 
 = What data does DebugHawk collect? =
 
-DebugHawk collects performance metrics only: page load times, database query times, memory usage, Core Web Vitals, etc. No personal user data or content is collected. All data is encrypted during transmission.
+Performance data only: timings, query and request details, memory usage, cache results and Core Web Vitals. Each pageview includes the page URL with query strings removed, plus the visitor's country, device type and browser. DebugHawk replaces slow query values with placeholders before they leave your site and doesn't store visitor IP addresses. See the External services section below for details.
 
-= How do I debug slow database queries? =
+= How do I find slow database queries? =
 
-DebugHawk automatically tracks all database queries, showing you slow queries, duplicate queries, and total database time. View this data in your DebugHawk dashboard to identify optimization opportunities.
+DebugHawk records slow queries on every page, along with how long they took and the plugin or theme that ran them. The Slow queries page in your dashboard groups them, so you can see which ones cost the most time across your WordPress site.
+
+== External services ==
+
+This plugin connects to DebugHawk, a performance monitoring service, to record and display your WordPress site's performance. It only connects once you've added your site configuration.
+
+* **What's sent:** performance data for each monitored page load. This includes page timings, Core Web Vitals, database query timings with values replaced by placeholders, external request timings, memory usage, cache results, the page URL with query strings removed, and the WordPress, PHP and plugin versions. DebugHawk records the visitor's country, device type and browser, but doesn't store IP addresses.
+* **When it's sent:** after each monitored page has loaded, from the visitor's browser to the endpoint in your configuration. The sample rate setting controls how many page loads DebugHawk monitors.
+* **Browser script:** monitored pages load the monitoring script from `cdn.debughawk.com`.
+
+See the DebugHawk [terms of service](https://debughawk.com/terms) and [privacy policy](https://debughawk.com/privacy).
 
 == Changelog ==
 
 = 1.3.0 =
 * Slow queries and external requests are now attributed to the plugin or theme that made them, including code run from hooks, symlinked plugins and themes, and custom layouts such as Bedrock
 * Slow query values, such as emails, IDs and search terms, are replaced with placeholders before they leave your site
-* Query values and credentials are removed from page and external request URLs before they're sent
+* Query strings and credentials are removed from page and external request URLs before they're sent
 * Up to 10 slow queries are now reported per page, up from 3, and long queries are kept up to 2,048 characters
 * Failed and timed-out external requests now show how long they held up the page, along with their error message
 * Lower memory use and overhead on pages that run thousands of database queries
 * More accurate database time on pages that run nested queries
 * Response caching plugins now work as expected for external requests while DebugHawk is active
-* Admin screens shown in a popup, such as plugin details, no longer count as separate page views
+* Admin screens shown in a popup, such as plugin details, no longer count as separate pageviews
 * Customizer previews and the Site Editor are now excluded correctly, including on subdirectory installs
 * An error collecting one metric no longer stops the rest of the page from loading
 * Pages with unusual characters in a URL or query are now reported instead of being skipped
@@ -164,36 +190,35 @@ DebugHawk automatically tracks all database queries, showing you slow queries, d
 * Removed redirect monitoring and the "Monitor Redirects" setting
 
 = 1.2.0 =
-* Added welcome notice for new installations guiding users to configuration
-* Automatically redirect to settings page on first activation
+* Added a welcome notice that points new installs to the configuration steps
+* Redirect to the settings page on first activation
 
 = 1.1.1 =
-* Ensure db.php drop-in is updated and removed on plugin deactivation
+* The db.php drop-in is now updated, and removed when the plugin is deactivated
 
 = 1.1.0 =
-* Beacon script now served from global CDN for faster performance
-* Send DebugHawk plugin version as part of telemetry payload
+* The browser script now loads from a global CDN
+* Send the DebugHawk plugin version with performance data
 * Improved performance monitoring accuracy
 
 = 1.0.1 =
-* Only track redirects originating from the same domain
-* Enhanced redirect detection accuracy
+* Only track redirects from the same domain
+* More accurate redirect detection
 
 = 1.0.0 =
 * Official stable release
-* Don't track /wp-login.php redirects to reduce noise
+* Don't track /wp-login.php redirects, to reduce noise
 
 = 0.8.2 =
-* Fixed PHP 8.4 deprecation warning for better compatibility
+* Fixed a PHP 8.4 deprecation warning
 
 = 0.8.1 =
 * Initial release on WordPress.org
-* Production-ready performance monitoring
 * Core Web Vitals monitoring
 * Database query performance tracking
 * PHP execution time and memory monitoring
 * External HTTP request timing
-* Object cache and page cache effectiveness
+* Object cache and page cache monitoring
 
 == Upgrade Notice ==
 
@@ -201,4 +226,4 @@ DebugHawk automatically tracks all database queries, showing you slow queries, d
 More accurate plugin and theme attribution for slow queries and external requests, and query values are no longer sent. Redirect monitoring has been removed.
 
 = 1.1.1 =
-Important update: Ensures db.php drop-in is properly managed during plugin deactivation.
+Fixes the db.php drop-in so it's removed when you deactivate the plugin.
