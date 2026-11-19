@@ -1,4 +1,6 @@
 # Directories
+/.agents export-ignore
+/.amp export-ignore
 /.wordpress-org export-ignore
 /.github export-ignore
 
