@@ -11,8 +11,15 @@ use PHPUnit\Framework\TestCase;
  * track_query() with its time in seconds.
  */
 class DatabaseCollectorTest extends TestCase {
+	protected ?string $plugin_dir = null;
+
 	protected function tearDown(): void {
-		unset( $GLOBALS['wpdb'], $GLOBALS['test_hooks'] );
+		unset( $GLOBALS['wpdb'], $GLOBALS['test_hooks'], $GLOBALS['wp_plugin_paths'] );
+
+		if ( $this->plugin_dir !== null ) {
+			unlink( "$this->plugin_dir/example.php" );
+			rmdir( $this->plugin_dir );
+		}
 	}
 
 	/**
@@ -63,7 +70,7 @@ class DatabaseCollectorTest extends TestCase {
 
 		$data = $collector->gather();
 
-		$this->assertSame( 1, $data['duplicate_query_count'] );
+		$this->assertSame( 40, $data['duplicate_query_count'] );
 		$this->assertCount( 1, $data['duplicate_queries'] );
 
 		$duplicate = $data['duplicate_queries'][0];
@@ -131,8 +138,8 @@ class DatabaseCollectorTest extends TestCase {
 
 		$data = $collector->gather();
 
-		// All five are counted, and the three most repeated are sent.
-		$this->assertSame( 5, $data['duplicate_query_count'] );
+		// Every run of all five is counted, and the three most repeated are sent.
+		$this->assertSame( 150, $data['duplicate_query_count'] );
 		$this->assertSame( [ 50, 40, 30 ], array_column( $data['duplicate_queries'], 'count' ) );
 	}
 
@@ -181,7 +188,7 @@ class DatabaseCollectorTest extends TestCase {
 
 		$data = $collector->gather();
 
-		$this->assertSame( 1, $data['duplicate_query_count'] );
+		$this->assertSame( 11, $data['duplicate_query_count'] );
 		$this->assertSame( 11, $data['duplicate_queries'][0]['count'] );
 	}
 
@@ -201,7 +208,76 @@ class DatabaseCollectorTest extends TestCase {
 		$this->assertNull( $data['duplicate_queries'] );
 	}
 
+	public function test_a_query_run_from_two_places_is_not_flagged_as_one_caller(): void {
+		$collector = $this->collector();
+
+		[ $run, $run_elsewhere ] = $this->plugin_call_sites();
+
+		// One place runs it in a loop, then another runs it after the threshold.
+		foreach ( range( 1, 9 ) as $id ) {
+			$run( $collector, $id );
+		}
+
+		$run_elsewhere( $collector, 10 );
+
+		$this->assertFalse( $this->collector_data( $collector )[0]['same_caller'] );
+	}
+
+	public function test_a_query_run_in_one_loop_is_flagged_as_one_caller(): void {
+		$collector = $this->collector();
+
+		[ $run ] = $this->plugin_call_sites();
+
+		foreach ( range( 1, 40 ) as $id ) {
+			$run( $collector, $id );
+		}
+
+		$duplicate = $this->collector_data( $collector )[0];
+
+		$this->assertTrue( $duplicate['same_caller'] );
+		$this->assertSame( 'example', $duplicate['backtrace']['slug'] );
+	}
+
+	public function test_long_queries_are_normalized_and_hashed_in_full_when_sampled(): void {
+		$collector = $this->collector();
+		$columns   = implode( ', ', array_map( static fn( $i ) => "column_$i", range( 1, 1000 ) ) );
+
+		foreach ( range( 1, 5 ) as $id ) {
+			$query = "SELECT $columns FROM wp_big WHERE secret = 'secret-$id'";
+			$collector->track_query( $query, 0.001, microtime( true ) );
+		}
+
+		$duplicate = $this->collector_data( $collector )[0];
+
+		// The hash is of the whole normalized query, as it is for short ones,
+		// not of the truncated SQL that's sent.
+		$this->assertSame( md5( "SELECT $columns FROM wp_big WHERE secret = ?" ), $duplicate['sql_hash'] );
+		$this->assertSame( 2048, strlen( $duplicate['sql'] ) );
+		$this->assertSame( 'SELECT', $duplicate['type'] );
+	}
+
+	/**
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_duplicates_are_unknown_without_a_drop_in_or_saved_queries(): void {
+		$GLOBALS['wpdb'] = (object) [ 'queries' => [], 'num_queries' => 0 ];
+
+		$collector = new DatabaseCollector( TestConfig::make() );
+		$collector->init();
+
+		// wpdb never runs the filter without SAVEQUERIES, so no duplicates
+		// doesn't mean there were none.
+		$this->assertNull( $collector->gather()['duplicate_query_count'] );
+	}
+
+	/**
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
 	public function test_finds_duplicates_when_queries_are_logged_instead(): void {
+		define( 'SAVEQUERIES', true );
+
 		$GLOBALS['wpdb'] = (object) [ 'queries' => [], 'num_queries' => 0 ];
 
 		$collector = new DatabaseCollector( TestConfig::make() );
@@ -225,6 +301,27 @@ class DatabaseCollectorTest extends TestCase {
 		$this->assertSame( [ $collector, 'track_query' ], $GLOBALS['wpdb']->debughawk_query_handler );
 
 		return $collector;
+	}
+
+	/**
+	 * Two functions that run the same query, from different lines of a file
+	 * attributed to a plugin, as tests can't be: they're inside DebugHawk.
+	 *
+	 * @return callable[]
+	 */
+	protected function plugin_call_sites(): array {
+		$dir = sys_get_temp_dir() . '/debughawk-plugin-' . getmypid();
+
+		mkdir( $dir );
+		$this->plugin_dir = $dir;
+
+		$query = 'static function ( $collector, $id ) { $collector->track_query( "SELECT * FROM wp_posts WHERE ID = $id", 0.001, microtime( true ) ); }';
+
+		file_put_contents( "$dir/example.php", "<?php\nreturn [\n$query,\n$query,\n];\n" );
+
+		$GLOBALS['wp_plugin_paths'] = [ WP_PLUGIN_DIR . '/example' => realpath( $dir ) ];
+
+		return require "$dir/example.php";
 	}
 
 	protected function collector_data( DatabaseCollector $collector ): array {

@@ -59,11 +59,17 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 
 	/**
 	 * The run that took each shape over the duplicate threshold, keyed by
-	 * fingerprint hash, with its raw SQL and who ran it.
+	 * fingerprint hash, with its SQL and who ran it. The SQL is raw, or already
+	 * normalized (and hashed) when it's long, so a long query isn't held raw.
+	 * Each time the count doubles after that, the caller is checked again, and
+	 * same_caller is false once a later run came from somewhere else.
 	 *
-	 * @var array<int, array{sql: string, type: string, backtrace: ?array}>
+	 * @var array<int, array{sql: string, sql_hash: ?string, type: string, backtrace: ?array, same_caller: bool}>
 	 */
 	protected array $duplicate_samples = [];
+
+	/** Raw SQL longer than this is normalized when sampled, rather than kept raw. */
+	protected const MAX_RAW_SAMPLE_LENGTH = 8192;
 
 	public function init(): void {
 		global $wpdb;
@@ -93,8 +99,10 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 		}
 
 		// Older DebugHawk drop-ins, Query Monitor's drop-in and SAVEQUERIES store
-		// every query in $wpdb->queries and pass each one through this filter.
-		$this->tracks_duplicates = true;
+		// every query in $wpdb->queries and pass each one through this filter,
+		// but wpdb only runs it when SAVEQUERIES is on (Query Monitor's drop-in
+		// turns it on). Without it, duplicates are unknown rather than none.
+		$this->tracks_duplicates = defined( 'SAVEQUERIES' ) && SAVEQUERIES;
 
 		add_filter( 'log_query_custom_data', [ $this, 'track_logged_query' ], 10, 5 );
 	}
@@ -219,21 +227,55 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 			$fingerprint['identical'] = false;
 		}
 
-		if ( $fingerprint['count'] === $this->duplicate_threshold ) {
-			$query     = trim( $query );
-			$backtrace = new Backtrace();
+		$count = $fingerprint['count'];
 
-			$this->duplicate_samples[ $key ] = [
-				'sql'       => $query,
-				'type'      => $this->determine_query_type( $query ),
-				'backtrace' => $backtrace->parse(),
-			];
+		// Sample at the threshold, then each time the count doubles: a few
+		// backtraces per shape, however long the loop.
+		if ( $count < $this->duplicate_threshold || $count % $this->duplicate_threshold !== 0 ) {
+			return;
 		}
+
+		$doublings = intdiv( $count, $this->duplicate_threshold );
+
+		if ( ( $doublings & ( $doublings - 1 ) ) !== 0 ) {
+			return;
+		}
+
+		if ( isset( $this->duplicate_samples[ $key ] ) ) {
+			$sample = &$this->duplicate_samples[ $key ];
+
+			if ( $sample['same_caller'] ) {
+				$backtrace = new Backtrace();
+
+				$sample['same_caller'] = $backtrace->parse() === $sample['backtrace'];
+			}
+
+			return;
+		}
+
+		$query     = trim( $query );
+		$backtrace = new Backtrace();
+		$sql_hash  = null;
+
+		if ( strlen( $query ) > self::MAX_RAW_SAMPLE_LENGTH ) {
+			$sql      = QueryNormalizer::normalize( $query );
+			$sql_hash = md5( $sql );
+			$query    = Util::truncate( $sql, self::MAX_SQL_LENGTH );
+		}
+
+		$this->duplicate_samples[ $key ] = [
+			'sql'         => $query,
+			'sql_hash'    => $sql_hash,
+			'type'        => $this->determine_query_type( $query ),
+			'backtrace'   => $backtrace->parse(),
+			'same_caller' => true,
+		];
 	}
 
 	/**
 	 * The query shapes that ran most often, at least as many times as the
-	 * duplicate threshold, with normalized SQL and their total time.
+	 * duplicate threshold, with normalized SQL and their total time, and how
+	 * many times repeated queries ran in total.
 	 *
 	 * @return array{count: int, queries: array}
 	 */
@@ -250,11 +292,16 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 		// Only the ones sent are normalized, as normalizing is slower.
 		foreach ( array_slice( $fingerprints, 0, $this->duplicate_queries_limit, true ) as $key => $fingerprint ) {
 			$sample = $this->duplicate_samples[ $key ];
-			$sql    = QueryNormalizer::normalize( $sample['sql'] );
+
+			if ( $sample['sql_hash'] === null ) {
+				$sql                = QueryNormalizer::normalize( $sample['sql'] );
+				$sample['sql']      = Util::truncate( $sql, self::MAX_SQL_LENGTH );
+				$sample['sql_hash'] = md5( $sql );
+			}
 
 			$queries[] = [
-				'sql'         => Util::truncate( $sql, self::MAX_SQL_LENGTH ),
-				'sql_hash'    => md5( $sql ),
+				'sql'         => $sample['sql'],
+				'sql_hash'    => $sample['sql_hash'],
 				'type'        => $sample['type'],
 				'count'       => $fingerprint['count'],
 				'duration_ms' => Util::seconds_to_milliseconds( $fingerprint['time'] ),
@@ -262,11 +309,16 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 				// result that could have been cached, rather than a loop.
 				'identical'   => $fingerprint['identical'],
 				'backtrace'   => $sample['backtrace'],
+				// Every sampled run came from the backtrace's caller. When false,
+				// other code runs this query too and the backtrace is just one of them.
+				'same_caller' => $sample['same_caller'],
 			];
 		}
 
 		return [
-			'count'   => count( $fingerprints ),
+			// Every run of a repeated query, including those not sent, as
+			// slow_query_count counts every slow query.
+			'count'   => array_sum( array_column( $fingerprints, 'count' ) ),
 			'queries' => $queries,
 		];
 	}
