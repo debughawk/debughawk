@@ -2,7 +2,7 @@
 Contributors: A5hleyRich
 Tags: performance, monitoring, debug, core web vitals, profiling
 Tested up to: 7.1
-Stable tag: 1.3.0
+Stable tag: 1.4.0
 Requires at least: 6.3
 Requires PHP: 7.4
 License: GPLv3
@@ -24,7 +24,7 @@ DebugHawk shows both sides. You see Core Web Vitals from real visitors next to t
 
 = See which plugin or theme is involved =
 
-DebugHawk traces slow database queries and external requests back to the plugin or theme that made them. That includes code run from hooks, symlinked plugins and themes, and custom layouts such as Bedrock. You go straight to the code that needs attention.
+DebugHawk traces slow and duplicate database queries and external requests back to the plugin or theme that made them. That includes code run from hooks, symlinked plugins and themes, and custom layouts such as Bedrock. You go straight to the code that needs attention.
 
 = What DebugHawk monitors =
 
@@ -36,7 +36,7 @@ DebugHawk traces slow database queries and external requests back to the plugin 
 
 **On the server:**
 
-* **Database:** slow queries, query count and total database time
+* **Database:** slow queries, duplicate queries, query count and total database time
 * **PHP:** execution time and memory usage
 * **External requests:** timing, failures and timeouts for API calls and other outgoing HTTP requests
 * **Object cache:** hit ratio
@@ -54,7 +54,7 @@ DebugHawk traces slow database queries and external requests back to the plugin 
 
 = Privacy =
 
-* DebugHawk replaces slow query values, such as emails, IDs and search terms, with placeholders before they leave your WordPress site
+* DebugHawk replaces database query values, such as emails, IDs and search terms, with placeholders before they leave your WordPress site
 * It strips query strings and credentials from page and external request URLs before sending them
 * It doesn't store visitor IP addresses
 
@@ -155,11 +155,15 @@ Yes. DebugHawk is built for agencies and developers who look after many WordPres
 
 = What data does DebugHawk collect? =
 
-Performance data only: timings, query and request details, memory usage, cache results and Core Web Vitals. Each pageview includes the page URL with query strings removed, plus the visitor's country, device type and browser. DebugHawk replaces slow query values with placeholders before they leave your site and doesn't store visitor IP addresses. See the External services section below for details.
+Performance data only: timings, query and request details, memory usage, cache results and Core Web Vitals. Each pageview includes the page URL with query strings removed, plus the visitor's country, device type and browser. DebugHawk replaces database query values with placeholders before they leave your site and doesn't store visitor IP addresses. See the External services section below for details.
 
 = How do I find slow database queries? =
 
 DebugHawk records slow queries on every page, along with how long they took and the plugin or theme that ran them. The Slow queries page in your dashboard groups them, so you can see which ones cost the most time across your WordPress site.
+
+= Can DebugHawk find duplicate database queries? =
+
+Yes. DebugHawk spots queries that run over and over on the same page, such as a query run once for every post in a loop, or the same query run repeatedly when its result could be cached. It shows how many times each one ran, how long they took in total and the plugin or theme behind them.
 
 == External services ==
 
@@ -172,6 +176,11 @@ This plugin connects to DebugHawk, a performance monitoring service, to record a
 See the DebugHawk [terms of service](https://debughawk.com/terms) and [privacy policy](https://debughawk.com/privacy).
 
 == Changelog ==
+
+= 1.4.0 =
+* Duplicate database queries are now tracked, such as a query run once for every post in a loop, and attributed to the plugin or theme that ran them
+* Queries that run with exactly the same SQL each time are flagged, as their result could usually be cached
+* Duplicate query values are replaced with placeholders before they leave your site, as slow query values are
 
 = 1.3.0 =
 * Slow queries and external requests are now attributed to the plugin or theme that made them, including code run from hooks, symlinked plugins and themes, and custom layouts such as Bedrock
@@ -221,6 +230,9 @@ See the DebugHawk [terms of service](https://debughawk.com/terms) and [privacy p
 * Object cache and page cache monitoring
 
 == Upgrade Notice ==
+
+= 1.4.0 =
+Adds duplicate database query tracking, with the plugin or theme behind each one. The db.php drop-in updates the next time you visit wp-admin.
 
 = 1.3.0 =
 More accurate plugin and theme attribution for slow queries and external requests, and query values are no longer sent. Redirect monitoring has been removed.
