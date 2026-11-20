@@ -119,7 +119,7 @@ DebugHawk monitors front end and back end performance together. Alongside Core W
 
 = Will DebugHawk slow down my WordPress site? =
 
-No. The monitoring code is lightweight and has negligible overhead, even on pages that run thousands of database queries. The browser script loads from a global CDN and sends its data after the page has loaded.
+Not noticeably. In our tests it adds around 1 ms of server time to a typical page, about 1% of the time WordPress takes to build it, and around 45 KB of memory. A heavy page running 1,000 queries adds around 7 ms. In the browser, the script is under 9 KB compressed, loads asynchronously and sends its data with the Beacon API when the visitor leaves, so it doesn't hold up your content.
 
 = How does DebugHawk work with Query Monitor? =
 
