@@ -41,6 +41,8 @@ class DatabaseCollectorTest extends TestCase {
 			'multi-row insert' => [ "INSERT INTO wp_log (a, b) VALUES (1, 'x'), (2, 'y')", "INSERT INTO wp_log (a, b) VALUES (3, 'z')" ],
 			'decimals'         => [ 'UPDATE wp_stats SET score = 1.5 WHERE id = 2', 'UPDATE wp_stats SET score = 10.25 WHERE id = 3' ],
 			'limits'           => [ 'SELECT * FROM wp_posts LIMIT 0, 10', 'SELECT * FROM wp_posts LIMIT 20, 10' ],
+			'leading decimal'  => [ 'UPDATE wp_stats SET score = .5 WHERE id = 2', 'UPDATE wp_stats SET score = 3 WHERE id = 3' ],
+			'trailing semicolon' => [ 'SELECT * FROM wp_posts WHERE ID = 1;', 'SELECT * FROM wp_posts WHERE ID = 2' ],
 		];
 	}
 

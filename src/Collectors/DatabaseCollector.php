@@ -181,8 +181,8 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 				// Quoted strings, with backslash escapes or doubled quotes.
 				"/'(?:[^'\\\\]++|\\\\.|'')*+'/s",
 				'/"(?:[^"\\\\]++|\\\\.|"")*+"/s',
-				// Numbers, but not digits inside identifiers such as wp_2_posts.
-				'/\b(?:0x[0-9a-f]+|\d+(?:\.\d+)?(?:e[+-]?\d+)?)\b/i',
+				// Numbers, including .5, but not digits inside identifiers such as wp_2_posts.
+				'/(?<![\w.])\.\d+|\b(?:0x[0-9a-f]+|\d+(?:\.\d+)?(?:e[+-]?\d+)?)\b/i',
 				// Lists of values, such as IN (?, ?, ?), however long.
 				'/\(\s*\?(?:\s*,\s*\?)*+\s*\)/',
 				// Rows of values in a multi-row INSERT.
@@ -193,7 +193,8 @@ class DatabaseCollector extends Collector implements NeedsInitiatingInterface {
 		);
 
 		// preg_replace() fails on PCRE limits, so fall back to the exact SQL.
-		return $fingerprint ?? $query;
+		// Trailing semicolons are trimmed here, as a regex would scan the whole query.
+		return rtrim( $fingerprint ?? $query, " \t\n\r;" );
 	}
 
 	/**
