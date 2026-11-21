@@ -7,7 +7,7 @@ class Settings {
 	private const PAGE_SLUG = 'debughawk';
 	private const SETTINGS_GROUP = 'debughawk_settings_group';
 
-	private const DASHBOARD_URL = 'https://eu.debughawk.com';
+	private const DASHBOARD_URL = 'https://app.debughawk.com';
 	private const DOCS_URL = 'https://debughawk.com/docs';
 	private const WEBSITE_URL = 'https://debughawk.com';
 

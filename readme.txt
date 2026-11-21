@@ -14,7 +14,7 @@ Performance monitoring built for WordPress. Core Web Vitals from real visitors, 
 
 **Find out why your WordPress site is slow without deactivating plugins one by one.** DebugHawk monitors every page load on your WordPress site, front end and back end. It shows you what's slowing each page down and which plugin or theme is behind it.
 
-[Try the live demo](https://eu.debughawk.com/demo?utm_source=wordpress.org&utm_medium=plugin-listing&utm_campaign=readme&utm_content=intro-demo), no account needed.
+[Try the live demo](https://app.debughawk.com/demo?utm_source=wordpress.org&utm_medium=plugin-listing&utm_campaign=readme&utm_content=intro-demo), no account needed.
 
 = Why WordPress sites slow down =
 
@@ -147,7 +147,7 @@ Yes. The Free plan covers one WordPress site with every feature included. DebugH
 
 = Can I try DebugHawk before installing it? =
 
-Yes. [Explore the live demo](https://eu.debughawk.com/demo?utm_source=wordpress.org&utm_medium=plugin-listing&utm_campaign=readme&utm_content=faq-demo) to see the DebugHawk dashboard monitoring a set of demo WordPress sites, with data that updates every minute.
+Yes. [Explore the live demo](https://app.debughawk.com/demo?utm_source=wordpress.org&utm_medium=plugin-listing&utm_campaign=readme&utm_content=faq-demo) to see the DebugHawk dashboard monitoring a set of demo WordPress sites, with data that updates every minute.
 
 = Can I monitor multiple WordPress sites? =
 
